@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  decision_matrix.html
+  ============================================================
+
+  COMPANION FILE
+  ──────────────
+  decision_matrix.css  (must be in the same folder)
+
+  HOW IT WORKS
+  ────────────
+  1. User selects criteria in four required sections:
+       Social Media → Data type → Privacy → Content type
+  2. Plus up to 7 optional selectable filters.
+  3. Two hidden filters (Data quality, Cross-platform) are always
+     scored silently without being shown as chips.
+  4. PATH STATUS per method:
+       ✓ Open   — all required sections have ≥1 explicit 1
+       ~ Uncertain — all sections pass BUT at least one used a '?'
+       ✗ Closed  — at least one required section has no match
+                   (only 0 and negative values count as blocking)
+  5. SCORE = sum of resolved filter values only (selectable + hidden).
+     Required section values are NOT included in the score.
+     This keeps scoring focused on the researcher's priorities,
+     not on the shape of the research question itself.
+  6. '?' always resolves to 0 (neutral, does not block the path).
+
+  CROSS-PLATFORM RULE
+  ───────────────────
+  The cross-platform penalty only applies when ≥2 social media
+  platforms are selected. With 0–1 platforms: contribution = 0.
+
+  SCORE SCALE (Scores sheet)
+    -1    No
+    -0.5  Rather not
+     0    Neutral / not specified
+     0.5  Rather yes / a bit
+     1    Yes
+
+
+  DEPENDENCIES
+  ────────────
+  decision_matrix.css — same folder, no external libraries.
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Access Decision Matrix</title>
+  <link rel="stylesheet" href="decision_matrix.css">
+</head>
+<body>
+
+<!-- ============================================================
+     SITE HEADER
+     ============================================================ -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <div>
+      <div class="site-title">Research Access Decision Matrix</div>
+      <div class="site-subtitle">Social Media Data Access — Method Selector</div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     DESCRIPTION BANNER
+     ============================================================ -->
+<div class="description-banner">
+  <div class="description-banner-inner">
+    <h2>How to use this tool</h2>
+    <p id="desc-main"></p>
+    <p id="desc-hidden"></p>
+  </div>
+</div>
+
+<!-- ============================================================
+     TOOLBAR
+     ============================================================ -->
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <button class="btn btn-outline" onclick="resetAll()">↺ Reset all selections</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN BODY
+     ============================================================ -->
+<div class="app-body">
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">Select your criteria</div>
+    <div class="sidebar-body">
+
+      <div class="sel-section">
+        <div class="sel-title">Social Media</div>
+        <div class="group-row">
+          <span class="group-tag tag-vlop">VLOP</span>
+          <div class="chip-grid" id="chips-platform-vlop"></div>
+        </div>
+        <div class="group-row" style="margin-top:4px">
+          <span class="group-tag tag-nvlop">Non-VLOP</span>
+          <div class="chip-grid" id="chips-platform-nvlop"></div>
+        </div>
+        <div class="sel-links">
+          <span class="sel-link" onclick="selectGroup('platform','all')">All</span>
+          <span class="sel-link" onclick="selectGroup('platform','none')">None</span>
+          <span class="sel-link" onclick="selectGroup('platform','vlop')">VLOP only</span>
+          <span class="sel-link" onclick="selectGroup('platform','nvlop')">Non-VLOP only</span>
+        </div>
+      </div>
+
+      <div class="sel-section">
+        <div class="sel-title">Data type</div>
+        <div class="chip-grid" id="chips-dtype"></div>
+        <div class="sel-links">
+          <span class="sel-link" onclick="selectGroup('dtype','all')">All</span>
+          <span class="sel-link" onclick="selectGroup('dtype','none')">None</span>
+        </div>
+      </div>
+
+      <div class="sel-section">
+        <div class="sel-title">Privacy</div>
+        <div class="chip-grid" id="chips-privacy"></div>
+        <div class="sel-links">
+          <span class="sel-link" onclick="selectGroup('privacy','all')">All</span>
+          <span class="sel-link" onclick="selectGroup('privacy','none')">None</span>
+        </div>
+      </div>
+
+      <div class="sel-section">
+        <div class="sel-title">Content type</div>
+        <div class="chip-grid" id="chips-content"></div>
+        <div class="sel-links">
+          <span class="sel-link" onclick="selectGroup('content','all')">All</span>
+          <span class="sel-link" onclick="selectGroup('content','none')">None</span>
+        </div>
+      </div>
+
+      <div class="sel-section">
+        <div class="sel-title">
+          Filters
+          <span class="sel-note">(optional — affect score only)</span>
+        </div>
+        <div class="chip-grid" id="chips-filters"></div>
+        <div class="sel-links">
+          <span class="sel-link" onclick="selectGroup('filters','all')">All</span>
+          <span class="sel-link" onclick="selectGroup('filters','none')">None</span>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ── RESULTS PANEL ────────────────────────────────────────── -->
+  <main class="results-panel">
+
+    <div class="results-header">
+      <div class="results-title">Access Methods</div>
+      <div class="results-meta" id="results-meta">Select criteria to see results</div>
+    </div>
+
+    <!-- Path status legend -->
+    <div class="path-legend">
+      <strong style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--kul-blue)">Path:</strong>
+      <span class="path-legend-item"><span class="path-dot path-dot-ok"></span>Open</span>
+      <span class="path-legend-item"><span class="path-dot path-dot-uncertain"></span>Uncertain (contains ?)</span>
+      <span class="path-legend-item"><span class="path-dot path-dot-blocked"></span>Closed</span>
+    </div>
+
+    <!-- Score scale legend -->
+    <div class="score-legend">
+      <strong style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--kul-blue)">Filter score:</strong>
+      <span class="score-legend-item"><span class="legend-dot" style="background:#2e7d32"></span>+1 Yes</span>
+      <span class="score-legend-item"><span class="legend-dot" style="background:#81c784"></span>+0.5 Rather yes</span>
+      <span class="score-legend-item"><span class="legend-dot" style="background:#bdbdbd"></span>0 Neutral</span>
+      <span class="score-legend-item"><span class="legend-dot" style="background:#e57373"></span>−0.5 Rather not</span>
+      <span class="score-legend-item"><span class="legend-dot" style="background:#c62828"></span>−1 No</span>
+    </div>
+
+    <div id="method-cards" class="method-cards">
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No criteria selected yet</h3>
+        <p>Select at least one item in each of<br>
+          <strong>Social Media, Data type, Privacy</strong> and <strong>Content type</strong><br>
+          to discover which access methods are available.</p>
+      </div>
+    </div>
+
+  </main>
+
+</div><!-- /app-body -->
+
+<!-- Shared tooltip element (positioned by JS) -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+'use strict';
+
+/* ============================================================
+   PAGE DESCRIPTION TEXT
+   Source: Description sheet rows "Website explanation" and "Hidden filters"
+   ============================================================ */
+const PAGE_DESCRIPTION =
+  'This page allows users to select where they want their data from, in which format ' +
+  'and which other criteria they want to take into account. Once the choice is done, ' +
+  'the page will present which data access method is the best suited for the research ' +
+  'question. One can look at the score of each data access to understand which elements ' +
+  'have weighted in the computation.';
+
+const HIDDEN_FILTER_NOTE =
+  'Two hidden filters are present in the decision matrix and assign penalties to the ' +
+  'access method when at least one of these two conditions aren\'t met. ' +
+  'Data quality filter: a penalty is attributed when the data collected through the method ' +
+  'is not fully suitable for scientific research (e.g., the data is not representative, ' +
+  'is biased, etc.). Cross-platform filter: a penalty is given when the access method ' +
+  'does not provide easy access to the data of several social media ' +
+  '(only applied when ≥2 platforms are selected).';
+
+/* ============================================================
+   PLATFORM DEFINITIONS
+   VLOP  = Very Large Online Platform (>45M EU monthly users)
+   ============================================================ */
+const VLOP_PLATFORMS    = ['Facebook','Instagram','LinkedIn','Pinterest','Snapchat','TikTok','X','YouTube'];
+const NONVLOP_PLATFORMS = ['BlueSky','Reddit','Telegram','Other'];
+
+/* ============================================================
+    CRITERIA DEFINITIONS
+   Each entry: { id, label, cls }
+     id    → key used in COL map below
+     label → displayed chip text
+     cls   → CSS colour class
+
+   NOTE: 7 selectable filters are listed here.
+         2 hidden filters (dataquality, crossplatform) are NOT
+         listed — they score silently via HIDDEN_SCORE_COLS.
+   ============================================================ */
+const CRITERIA = {
+
+  dtype: [
+    { id:'content',     label:'Content data',    cls:'chip-data' },
+    { id:'user',        label:'User data',        cls:'chip-data' },
+    { id:'engagement',  label:'Engagement data',  cls:'chip-data' },
+    { id:'moderation',  label:'Moderation data',  cls:'chip-data' },
+    { id:'temporal',    label:'Temporal data',    cls:'chip-data' },
+    { id:'network',     label:'Network data',     cls:'chip-data' },
+    { id:'algorithmic', label:'Algorithmic data', cls:'chip-data' },
+    { id:'geospatial',  label:'Geospatial data',  cls:'chip-data' },
+  ],
+
+  privacy: [
+    { id:'public',  label:'Public data',  cls:'chip-pub'  },
+    { id:'private', label:'Private data', cls:'chip-priv' },
+  ],
+
+  content: [
+    { id:'risks',   label:'Systemic risks',   cls:'chip-ct' },
+    { id:'general', label:'General content',  cls:'chip-ct' },
+    { id:'ads',     label:'Advertisements',   cls:'chip-ct' },
+  ],
+
+  // add / remove selectable filters here
+  filters: [
+    { id:'ethical', label:'Ethical',                cls:'chip-f-ethical' },
+    { id:'legal',   label:'Legal',                  cls:'chip-f-legal'   },
+    { id:'ctx',     label:'Contextual',              cls:'chip-f-ctx'     },
+    { id:'cost',    label:'Cost',                    cls:'chip-f-cost'    },
+    { id:'tech',    label:'Technically easy',        cls:'chip-f-tech'    },
+    { id:'admin',   label:'Administratively easy',   cls:'chip-f-admin'   },
+    { id:'fast',    label:'Short timeframes',        cls:'chip-f-fast'    },
+  ],
+};
+
+/* ============================================================
+    COLUMN INDEX MAP
+   Maps each criterion id → 0-based column index in ACCESS_MATRIX.
+   Must exactly match Scores column order:
+
+     0  VLOP
+     1  Non-VLOP
+     2  Content data
+     3  User data
+     4  Engagement data
+     5  Moderation data
+     6  Temporal data
+     7  Network data
+     8  Algorithmic data
+     9  Geospatial data
+     10 Public
+     11 Private
+     12 Systemic risks
+     13 Other type of content
+     14 Ads
+     15 Ethical          (selectable filter)
+     16 Legal            (selectable filter)
+     17 Contextual       (selectable filter)
+     18 Cost (expensive) (selectable filter)
+     19 Technically easy (selectable filter)
+     20 Administratively easy (selectable filter)
+     21 Fast             (selectable filter)
+     22 Scientific       (HIDDEN — always scored)
+     23 Cross-platform   (HIDDEN — always scored)
+   ============================================================ */
+const COL = {
+  platform_vlop:  0,
+  platform_nvlop: 1,
+  content:        2,
+  user:           3,
+  engagement:     4,
+  moderation:     5,
+  temporal:       6,
+  network:        7,
+  algorithmic:    8,
+  geospatial:     9,
+  public:        10,
+  private:       11,
+  risks:         12,
+  general:       13, // content type: general content (not related to systemic risks)
+  ads:           14,
+  // Selectable filters (indices 15–21)
+  ethical:       15,
+  legal:         16,
+  ctx:           17,
+  cost:          18,
+  tech:          19,
+  admin:         20,
+  fast:          21,
+  // Hidden filters (always scored, never shown as chips)
+  dataquality:   22, // HIDDEN — always scored (formerly: scientific)
+  crossplatform: 23,
+};
+
+/* Human-readable names for block-reason messages */
+const COL_LABELS = {
+  platform_vlop:  'VLOP platforms',
+  platform_nvlop: 'Non-VLOP platforms',
+  content:        'Content data',
+  user:           'User data',
+  engagement:     'Engagement data',
+  moderation:     'Moderation data',
+  temporal:       'Temporal data',
+  network:        'Network data',
+  algorithmic:    'Algorithmic data',
+  geospatial:     'Geospatial data',
+  public:         'Public data',
+  private:        'Private data',
+  risks:          'Systemic risks',
+  general:        'General content',
+  ads:            'Advertisements',
+  ethical:        'Ethical',
+  legal:          'Legal',
+  ctx:            'Contextual',
+  cost:           'Cost (expensive)',
+  tech:           'Technically easy',
+  admin:          'Administratively easy',
+  fast:           'Short timeframes',
+  dataquality:    'Data quality',
+  crossplatform:  'Cross-platform access',
+};
+
+/*  hidden column ids always included in scoring */
+const HIDDEN_SCORE_COLS = ['dataquality', 'crossplatform'];
+
+/* ============================================================
+    ACCESS METHOD SCORING MATRIX
+   Source: Scores sheet rows 5–14.
+
+   Values: 1 | 0.5 | 0 | -0.5 | -1 | '?' (→ 0, path stays open)
+
+   Column order matches COL above (index 0 … 23).
+   For required sections (cols 0–14): 1 = path open, 0/-0.5/-1 = path closed, '?' = uncertain.
+   For filters (cols 15–23): values contribute to score only.
+   ============================================================ */
+const ACCESS_MATRIX = {
+  //                              [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9] [10] [11] [12] [13] [14] [15] [16] [17] [18] [19] [20] [21] [22] [23]
+  //                             VLOP  NV  Cont User  Eng  Mod Temp  Net Algo  Geo  Pub Priv Risk  Gen  Ads  Eth  Leg  Ctx Cost Tech Adm Fast  DQ   CP
+  'Closed data API':        [      1,   0,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   0,   0,   1,   1,  -1,  -1,   1,  -1,  -1,   0,  -1 ],
+  'Public data API':        [      1,   1,   1,   1,   1,   0,  '?', '?', '?',   0,   1,   0,   1,   1,  '?',  1,   1,  -1,  -1,   1,  -1,  -1,  -1,  -1 ],
+  'Commercial API':         [      1,   1,   1,  '?',  1,  '?', '?', '?', '?', '?',  1,  '?',  1,   1,  '?',  1,   1,  -1,  -1,   1,  '?','?',  -1,  -1 ],
+  'Ads library':            [      1,  '?',  1,  '?',  1,  '?', '?',   0, '?', '?',  1,   0,   1,   1,   1,   1,   1,  -1,  -1,   1,  '?','?',   0,  -1 ],
+  'Statements of reason':   [      1,   1,   0,   0,   0,   1,   0,   0,   0,   0,   1,  '?',  1,   0,   0,   1,   1,  -1,  -1,   1,   1,   1,   1,  -1 ],
+  'Logged-in scraping':     [      1,   1,   1,   0,   1,   0,   0,   1,   1,   0,   1,   1,   1,   1,   1,-0.5,  -1,   1,  '?',  0,   1,-0.5,   1,  -1 ],
+  'Logged-out scraping':    [      1,   1,   1,   0,   1,   0,   0,   0,   1,   0,   1,   0,   1,   1,   1, 0.5, 0.5,   1,  '?', -1,   1,-0.5,   1,  -1 ],
+  'Tracking':               [      1,   1,   1,   0,   1,   0,   0,   1,   1,   0,   1,   1,   1,   1,   1, 0.5, 0.5,   1, 0.5,-0.5,-0.5,  -1,   1,   0 ],
+  'Data donation':          [      1,   1,   1,   0,   1,   0,   1,   1,   0,   0,   1,   1,   1,   1,   1, 0.5, 0.5,  -1, 0.5,   1,-0.5,  -1,   1,   0 ],
+  'Third-party repository': [      1,   1,   1,   0,  '?', '?',  1,  '?',  0,   0,   1,  '?',  1,   1,   1,  '?','?',  -1,  -1, 0.5,   1,   1,   0,   0 ],
+};
+
+/* ============================================================
+    TOOLTIP DESCRIPTIONS
+   Source: Description. Keys = criterion id OR access method name.
+   ============================================================ */
+const DESCRIPTIONS = {
+  // Social media group labels
+  'vlop':
+    'Representing social media that exceed 45 million users a month in the European Union ' +
+    'that are bound to specific regulation.',
+  'non-vlop':
+    "Representing all social media that don't fit the VLOP category.",
+
+  // Individual platforms
+  'facebook':   'Facebook — Meta platform. VLOP.',
+  'instagram':  'Instagram — Meta platform. VLOP.',
+  'linkedin':   'LinkedIn — Microsoft platform. VLOP.',
+  'pinterest':  'Pinterest — visual discovery platform. VLOP.',
+  'snapchat':   'Snapchat — ephemeral messaging platform. VLOP.',
+  'tiktok':     'TikTok — short-video platform. VLOP.',
+  'x':          'X (formerly Twitter) — microblogging platform. VLOP.',
+  'youtube':    'YouTube — Google video platform. VLOP.',
+  'bluesky':    'BlueSky — decentralised microblogging platform. Non-VLOP.',
+  'reddit':     'Reddit — link-aggregation and discussion platform. Non-VLOP.',
+  'telegram':   'Telegram — messaging and channel platform. Non-VLOP.',
+  'other':      'Any other social media platform not listed above. Non-VLOP.',
+
+  // Data types
+  'content':
+    'Content created and/or posted by the user such as text (including mentions, hashtags ' +
+    'and links), pictures, videos or sounds.',
+  'user':
+    'All metadata concerning the account — followers count, user information, demographic information, etc.',
+  'engagement':
+    'Metrics testifying of the users\' activity on a post such as likes, comments, shares and views.',
+  'moderation':
+    'Posts or users flagged, deleted or labelled by external sources.',
+  'temporal':
+    'Time-based activity, for example the engagement a post receives over time.',
+  'network':
+    'Users\' connections and interactions.',
+  'algorithmic':
+    'Importance of various algorithmic features.',
+  'geospatial':
+    'Anonymised and aggregated location data.',
+
+  // Privacy
+  'public':
+    'Data that is accessible to every user of the platform and that is not restrained ' +
+    'to specific communities of users.',
+  'private':
+    'Data that is only accessible to allowed users such as groups, friends, etc.',
+
+  // Content types
+  'risks':
+    'Content that is related to systemic risks to the European Union such as disinformation, ' +
+    'hatred content, political interference or other forms of content threatening fundamental rights.',
+  'general':
+    'Content that is not directly related to systemic risks.',
+  'ads':
+    'Content that is published and marked as advertisements.',
+
+  // Selectable filters
+  'ethical':
+    'Assuring that this kind of access is ethically compliant (not threatening users\' integrity or personal data).',
+  'legal':
+    'Assuring that this kind of access is legally compliant (not infringing terms of services or data protection regulation).',
+  'ctx':
+    'Ensuring that the data collection also considers the context in which the data occurs.',
+  'cost':
+    'Consideration of whether this access method involves significant financial cost.',
+  'tech':
+    "Ensuring that the data collection doesn't rely on too much hard coding.",
+  'admin':
+    "Ensuring that the data collection doesn't rely on too much administrative work such as request forms towards platforms or users.",
+  'fast':
+    'Ensuring that the data collection can be done in short timeframes.',
+
+  // Access methods
+  'Closed data API':
+    'Data that vetted researchers can request once their application was accepted by the DSA ' +
+    'Data Access Portal — data normally not made accessible because of privacy reasons.',
+  'Public data API':
+    'APIs made publicly available by the platforms (either after a vetting process, or directly). ' +
+    'They only contain public data.',
+  'Commercial API':
+    'Paying APIs. They only contain public data as well.',
+  'Ads library':
+    'Repository containing all ads published on the platform.',
+  'Statements of reason':
+    'This type of repository contains all moderation decisions made by the platform.',
+  'Logged-in scraping':
+    'Data directly scraped on the social media after a connection on the platform.',
+  'Logged-out scraping':
+    'Data directly scraped on the social media without a connection on the platform.',
+  'Tracking':
+    'A software installed on a user web browser that directly collects all content presented to them.',
+  'Data donation':
+    'Data a user is willing to give after having requested it themselves from the social media platform.',
+  'Third-party repository':
+    'Data collected on a repository created for another purpose than the research question.',
+};
+
+/* ============================================================
+   APPLICATION STATE
+   All sets start empty (nothing pre-selected).
+   ============================================================ */
+const state = {
+  platform:     new Set(),
+  dtype:        new Set(),
+  privacy:      new Set(),
+  content:      new Set(),
+  filters:      new Set(),
+  platformType: {}, // id → 'vlop' | 'nvlop'
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+
+/** Normalise a display name to a safe id string */
+function platformId(name) {
+  return name.toLowerCase().replace(/[\s.]/g, '_');
+}
+
+/**
+ * Resolve a raw matrix value to a number.
+ * '?' and null always → 0 (neutral; never blocks path; scores nothing).
+ */
+function resolveCell(v) {
+  if (v === null || v === undefined || v === '?') return 0;
+  return typeof v === 'number' ? v : 0;
+}
+
+/** Read the RAW (unresolved) value from a matrix row by criterion id */
+function rawCell(row, colId) {
+  const idx = COL[colId];
+  if (idx === undefined || idx >= row.length) return null;
+  return row[idx];
+}
+
+/** Read the RESOLVED (numeric) value from a matrix row by criterion id */
+function cell(row, colId) {
+  return resolveCell(rawCell(row, colId));
+}
+
+/** CSS class for a numeric score value */
+function scoreClass(v) {
+  if (v > 0) return 'val-pos';
+  if (v < 0) return 'val-neg';
+  return 'val-zero';
+}
+
+/** Bar fill colour for a score value in [−1, 1] */
+function barColor(v) {
+  if (v >= 1)    return '#2e7d32';
+  if (v >= 0.5)  return '#81c784';
+  if (v === 0)   return '#bdbdbd';
+  if (v >= -0.5) return '#e57373';
+  return '#c62828';
+}
+
+/* ============================================================
+   TOOLTIP SYSTEM
+   Shows after 1 second of hover; hides on mouseleave.
+   Child elements have pointer-events:none in CSS to prevent
+   premature mouseleave firing on the parent chip.
+   ============================================================ */
+let tooltipEl = null;
+let tipTimer  = null;
+let tipRAF    = null;
+let tipX = 0, tipY = 0;
+
+function initTooltip() {
+  tooltipEl = document.getElementById('tooltip');
+}
+
+function attachTooltip(el, text) {
+  el.addEventListener('mouseenter', e => {
+    tipX = e.clientX; tipY = e.clientY;
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(() => {
+      if (!tooltipEl) return;
+      tooltipEl.textContent = text;
+      tooltipEl.classList.add('visible');
+      rafPos();
+    }, 1000);
+  });
+  el.addEventListener('mousemove', e => { tipX = e.clientX; tipY = e.clientY; });
+  el.addEventListener('mouseleave', () => {
+    clearTimeout(tipTimer);
+    cancelAnimationFrame(tipRAF);
+    if (tooltipEl) tooltipEl.classList.remove('visible');
+  });
+}
+
+function rafPos() {
+  tipRAF = requestAnimationFrame(() => {
+    if (!tooltipEl || !tooltipEl.classList.contains('visible')) return;
+    const pad = 14, tw = tooltipEl.offsetWidth, th = tooltipEl.offsetHeight;
+    let x = tipX + pad, y = tipY + pad;
+    if (x + tw > window.innerWidth  - pad) x = tipX - tw - pad;
+    if (y + th > window.innerHeight - pad) y = tipY - th - pad;
+    tooltipEl.style.left = x + 'px';
+    tooltipEl.style.top  = y + 'px';
+    rafPos();
+  });
+}
+
+/* ============================================================
+   BUILD UI — called once on DOMContentLoaded
+   ============================================================ */
+function buildUI() {
+  initTooltip();
+
+  document.getElementById('desc-main').textContent   = PAGE_DESCRIPTION;
+  document.getElementById('desc-hidden').textContent = HIDDEN_FILTER_NOTE;
+
+  // Platform chips
+  VLOP_PLATFORMS.forEach(name => {
+    const id = platformId(name);
+    state.platformType[id] = 'vlop';
+    const chip = makeChip(id, name, 'chip-vlop', 'platform', false);
+    document.getElementById('chips-platform-vlop').appendChild(chip);
+  });
+  NONVLOP_PLATFORMS.forEach(name => {
+    const id = platformId(name);
+    state.platformType[id] = 'nvlop';
+    const chip = makeChip(id, name, 'chip-nvlop', 'platform', false);
+    document.getElementById('chips-platform-nvlop').appendChild(chip);
+  });
+
+  // Criteria chips
+  Object.entries(CRITERIA).forEach(([group, items]) => {
+    const container = document.getElementById(`chips-${group}`);
+    items.forEach(item =>
+      container.appendChild(makeChip(item.id, item.label, item.cls, group, false))
+    );
+  });
+
+  update();
+}
+
+/* ============================================================
+   MAKE CHIP ELEMENT
+   ============================================================ */
+function makeChip(id, label, cls, group, checked) {
+  const div = document.createElement('div');
+  div.className = `chip ${cls}${checked ? '' : ' inactive'}`;
+  div.dataset.id    = id;
+  div.dataset.group = group;
+  div.innerHTML = `<input type="checkbox" ${checked ? 'checked' : ''}><span>${label}</span>`;
+
+  // All clicks handled on the div (children have pointer-events:none in CSS)
+  div.addEventListener('click', () => toggleChip(group, id, !state[group].has(id)));
+
+  if (DESCRIPTIONS[id]) attachTooltip(div, DESCRIPTIONS[id]);
+  return div;
+}
+
+/* ============================================================
+   TOGGLE / SELECT HELPERS
+   ============================================================ */
+function toggleChip(group, id, on) {
+  if (on) state[group].add(id);
+  else    state[group].delete(id);
+  const chip = document.querySelector(`.chip[data-group="${group}"][data-id="${id}"]`);
+  if (chip) {
+    chip.classList.toggle('inactive', !on);
+    const cb = chip.querySelector('input'); if (cb) cb.checked = on;
+  }
+  update();
+}
+
+function selectGroup(group, mode) {
+  if (group === 'platform' && (mode === 'vlop' || mode === 'nvlop')) {
+    document.querySelectorAll('.chip[data-group="platform"]').forEach(c => {
+      const keep = state.platformType[c.dataset.id] === mode;
+      c.classList.toggle('inactive', !keep);
+      const cb = c.querySelector('input'); if (cb) cb.checked = keep;
+      if (keep) state.platform.add(c.dataset.id);
+      else      state.platform.delete(c.dataset.id);
+    });
+  } else {
+    const on = mode === 'all';
+    document.querySelectorAll(`.chip[data-group="${group}"]`).forEach(c => {
+      c.classList.toggle('inactive', !on);
+      const cb = c.querySelector('input'); if (cb) cb.checked = on;
+      if (on) state[group].add(c.dataset.id);
+      else    state[group].delete(c.dataset.id);
+    });
+  }
+  update();
+}
+
+function resetAll() {
+  ['platform','dtype','privacy','content','filters'].forEach(g => state[g].clear());
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.classList.add('inactive');
+    const cb = chip.querySelector('input'); if (cb) cb.checked = false;
+  });
+  update();
+}
+
+/* ============================================================
+   CORE EVALUATION LOGIC
+   ============================================================ */
+
+function getPlatformFlags() {
+  let hasVLOP = false, hasNonVLOP = false;
+  state.platform.forEach(id => {
+    if (state.platformType[id] === 'vlop')  hasVLOP    = true;
+    if (state.platformType[id] === 'nvlop') hasNonVLOP = true;
+  });
+  return { hasVLOP, hasNonVLOP };
+}
+
+/**
+ * Evaluate a required section against a matrix row.
+ *
+ * Returns one of three statuses:
+ *   'ok'        — at least one selected column has an explicit value > 0
+ *   'uncertain' — no explicit positive, but at least one '?' (path stays open)
+ *   'closed'    — all selected columns have explicit 0 or negative values
+ *
+ * Only an explicit 0, -0.5, or -1 closes the path.
+ * '?' keeps it open but flags uncertainty.
+ */
+function sectionStatus(row, colIds) {
+  let hasUncertain = false;
+  for (const colId of colIds) {
+    const raw = rawCell(row, colId);
+    if (raw === '?') {
+      hasUncertain = true;   // uncertain, keep checking for an explicit positive
+    } else if (resolveCell(raw) > 0) {
+      return 'ok';           // found an explicit positive → section satisfied
+    }
+  }
+  // No explicit positive found
+  return hasUncertain ? 'uncertain' : 'closed';
+}
+
+/**
+ * Combine multiple section statuses into one overall status.
+ * Worst-case wins: 'closed' > 'uncertain' > 'ok'.
+ */
+function worstStatus(...statuses) {
+  if (statuses.includes('closed'))    return 'closed';
+  if (statuses.includes('uncertain')) return 'uncertain';
+  return 'ok';
+}
+
+/**
+ * Main evaluation function.
+ * Returns { results, hasRequired }
+ *   results: methodName → { pathStatus, filterScore, requiredRows, filterRows, blockReasons }
+ */
+function evaluate() {
+  const { hasVLOP, hasNonVLOP } = getPlatformFlags();
+
+  const platformCols = [];
+  if (hasVLOP)    platformCols.push('platform_vlop');
+  if (hasNonVLOP) platformCols.push('platform_nvlop');
+
+  const dtypeCols   = CRITERIA.dtype.filter(d => state.dtype.has(d.id)).map(d => d.id);
+  const privacyCols = CRITERIA.privacy.filter(d => state.privacy.has(d.id)).map(d => d.id);
+  const contentCols = CRITERIA.content.filter(d => state.content.has(d.id)).map(d => d.id);
+  const filterCols  = CRITERIA.filters.filter(d => state.filters.has(d.id)).map(d => d.id);
+
+  const hasRequired =
+    platformCols.length > 0 && dtypeCols.length > 0 &&
+    privacyCols.length > 0  && contentCols.length > 0;
+
+  const results = {};
+
+  Object.entries(ACCESS_MATRIX).forEach(([name, row]) => {
+
+    /* ── Path status per required section ──────────────────── */
+    const statPlat    = sectionStatus(row, platformCols);
+    const statDtype   = sectionStatus(row, dtypeCols);
+    const statPrivacy = sectionStatus(row, privacyCols);
+    const statContent = sectionStatus(row, contentCols);
+
+    // Overall path status = worst of all sections
+    const pathStatus = worstStatus(statPlat, statDtype, statPrivacy, statContent);
+
+    /* ── Block reasons (only for closed sections) ───────────── */
+    const blockReasons = [];
+    const maybeBlock = (label, cols, status) => {
+      if (status !== 'closed') return;
+      // Report only columns that are explicitly non-positive (exclude '?')
+      const failing = cols
+        .filter(c => rawCell(row, c) !== '?' && cell(row, c) <= 0)
+        .map(c => `${COL_LABELS[c]} (value: ${rawCell(row, c)})`);
+      if (failing.length) blockReasons.push({ section: label, detail: failing.join(', ') });
+    };
+    maybeBlock('Social Media',  platformCols, statPlat);
+    maybeBlock('Data type',     dtypeCols,    statDtype);
+    maybeBlock('Privacy',       privacyCols,  statPrivacy);
+    maybeBlock('Content type',  contentCols,  statContent);
+
+    /* ── Required section rows for display ──────────────────── */
+    // These are shown in the card to explain path status,
+    // but do NOT contribute to the score.
+    const requiredRows = [];
+    const pushRequired = (colIds, sectionLabel, sectionStat) => {
+      colIds.forEach(colId => {
+        const raw = rawCell(row, colId);
+        requiredRows.push({
+          label:   COL_LABELS[colId] || colId,
+          section: sectionLabel,
+          raw,
+          status:  raw === '?' ? 'uncertain'
+                 : resolveCell(raw) > 0 ? 'ok'
+                 : 'closed',
+        });
+      });
+    };
+    pushRequired(platformCols, 'Social media', statPlat);
+    pushRequired(dtypeCols,    'Data type',    statDtype);
+    pushRequired(privacyCols,  'Privacy',      statPrivacy);
+    pushRequired(contentCols,  'Content type', statContent);
+
+    /* ── Filter score rows (ONLY these contribute to score) ─── */
+    const filterRows = [];
+
+    // Selectable filters chosen by the user
+    filterCols.forEach(colId => {
+      const v = cell(row, colId);
+      filterRows.push({ label: COL_LABELS[colId], section: 'Filter', value: v, isHidden: false });
+    });
+
+    // Hidden filters — always scored
+    HIDDEN_SCORE_COLS.forEach(colId => {
+      // ★ Cross-platform rule: only apply when ≥2 platforms selected
+      if (colId === 'crossplatform') {
+        if (state.platform.size >= 2) {
+          filterRows.push({ label: COL_LABELS[colId], section: 'Hidden filter', value: cell(row, colId), isHidden: true });
+        } else {
+          filterRows.push({ label: COL_LABELS[colId] + ' (< 2 platforms)', section: 'Hidden filter', value: 0, isHidden: true });
+        }
+      } else {
+        // dataquality and any other hidden filters are always scored unconditionally
+        filterRows.push({ label: COL_LABELS[colId], section: 'Hidden filter', value: cell(row, colId), isHidden: true });
+      }
+    });
+
+    // Total filter score
+    const filterScore = filterRows.reduce((sum, r) => sum + r.value, 0);
+
+    results[name] = { pathStatus, filterScore, requiredRows, filterRows, blockReasons };
+  });
+
+  return { results, hasRequired };
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function update() {
+  const { results, hasRequired } = evaluate();
+  const container = document.getElementById('method-cards');
+  const meta      = document.getElementById('results-meta');
+
+  if (!hasRequired) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No criteria selected yet</h3>
+        <p>Select at least one item in each of<br>
+          <strong>Social Media, Data type, Privacy</strong> and <strong>Content type</strong><br>
+          to discover which access methods are available.</p>
+      </div>`;
+    meta.textContent = 'Select criteria to see results';
+    return;
+  }
+
+  // Sort order: ok → uncertain → closed, then by filterScore desc within each group
+  const statusOrder = { ok: 0, uncertain: 1, closed: 2 };
+  const sorted = Object.entries(results).sort((a, b) => {
+    const so = statusOrder[a[1].pathStatus] - statusOrder[b[1].pathStatus];
+    if (so !== 0) return so;
+    return b[1].filterScore - a[1].filterScore;
+  });
+
+  const counts = { ok: 0, uncertain: 0, closed: 0 };
+  sorted.forEach(([, r]) => counts[r.pathStatus]++);
+  meta.textContent =
+    `${counts.ok} open · ${counts.uncertain} uncertain · ${counts.closed} closed`;
+
+  // Max filter score among open+uncertain methods for bar scaling
+  const openScores = sorted
+    .filter(([, r]) => r.pathStatus !== 'closed')
+    .map(([, r]) => r.filterScore);
+  const maxScore = openScores.length ? Math.max(...openScores, 0.01) : 1;
+
+  container.innerHTML = '';
+
+  sorted.forEach(([name, result]) => {
+
+    const card = document.createElement('div');
+    card.className = `method-card ${result.pathStatus}`;
+
+    /* Badge */
+    const badgeCls  = result.pathStatus === 'ok'
+      ? 'badge-ok'
+      : result.pathStatus === 'uncertain'
+        ? 'badge-uncertain'
+        : 'badge-blocked';
+    const badgeTxt  = result.pathStatus === 'ok'
+      ? '✓ Open'
+      : result.pathStatus === 'uncertain'
+        ? '~ Uncertain'
+        : '✗ Closed';
+
+    /* Score bar (only for open / uncertain) */
+    const showScore  = result.pathStatus !== 'closed';
+    const scoreSign  = result.filterScore > 0 ? '+' : '';
+    const scoreColor = result.filterScore > 0 ? '#2e7d32' : result.filterScore < 0 ? '#c62828' : '#6b6b6b';
+    const barW       = showScore
+      ? Math.max(3, Math.round((Math.max(result.filterScore, 0) / maxScore) * 100)) + '%'
+      : '0%';
+    const bColor     = barColor(result.filterScore);
+
+    /* ── Required section display ────────────────────────────── */
+    // Show which required criteria were matched and how
+    const reqTableRows = result.requiredRows.map(r => {
+      const rawDisp = r.raw === null ? 'n/a' : String(r.raw);
+      const indicatorCls = r.status === 'ok' ? 'path-ok'
+                         : r.status === 'uncertain' ? 'path-uncertain'
+                         : 'path-blocked';
+      const indicatorTxt = r.status === 'ok' ? '✓ Open'
+                         : r.status === 'uncertain' ? '? Uncertain'
+                         : '✗ Closed';
+      return `
+        <tr>
+          <td class="col-criterion">${r.label}</td>
+          <td class="col-section">${r.section}</td>
+          <td class="col-val" style="font-family:monospace">${rawDisp}</td>
+          <td class="col-bar">
+            <span class="path-indicator ${indicatorCls}">${indicatorTxt}</span>
+          </td>
+        </tr>`;
+    }).join('');
+
+    /* ── Filter score table ──────────────────────────────────── */
+    const maxAbs = Math.max(...result.filterRows.map(r => Math.abs(r.value)), 0.01);
+    const filterTableRows = result.filterRows.map(r => {
+      const vDisp  = r.value === 0 ? '0' : (r.value > 0 ? '+' + r.value : String(r.value));
+      const cls    = scoreClass(r.value);
+      const mBarW  = Math.round((Math.abs(r.value) / maxAbs) * 100) + '%';
+      const mColor = barColor(r.value);
+      const hiddenTag = r.isHidden ? `<span class="hidden-tag">hidden</span>` : '';
+      return `
+        <tr>
+          <td class="col-criterion">${r.label}${hiddenTag}</td>
+          <td class="col-section">${r.section}</td>
+          <td class="col-val ${cls}">${vDisp}</td>
+          <td class="col-bar">
+            <div class="mini-bar-bg">
+              <div class="mini-bar-fill" style="width:${mBarW};background:${mColor}"></div>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    /* ── Block reasons ───────────────────────────────────────── */
+    const blockHTML = result.blockReasons.length > 0
+      ? `<div class="block-section-title">Reasons for closure</div>
+         <div class="block-reasons">
+           ${result.blockReasons.map(r => `
+             <div class="block-reason-row">
+               <span class="block-tag">${r.section}</span>
+               <span class="block-detail">No match — <strong>${r.detail}</strong></span>
+             </div>`).join('')}
+         </div>`
+      : '';
+
+    /* ── Assemble card ───────────────────────────────────────── */
+    card.innerHTML = `
+      <div class="card-head">
+        <div class="card-name">${name}</div>
+        <span class="card-badge ${badgeCls}">${badgeTxt}</span>
+      </div>
+      <div class="card-body">
+
+        <!-- Required sections: path breakdown -->
+        <table class="score-details" style="margin-bottom:10px">
+          <thead>
+            <tr>
+              <th class="col-criterion">Required criterion</th>
+              <th class="col-section">Section</th>
+              <th class="col-val">Value</th>
+              <th class="col-bar">Path</th>
+            </tr>
+          </thead>
+          <tbody>${reqTableRows}</tbody>
+        </table>
+
+        ${result.pathStatus !== 'closed' && result.filterRows.length > 0 ? `
+          <!-- Filter score: total + breakdown -->
+          <div class="score-total-row">
+            <span class="score-total-label">Filter score</span>
+            <span class="score-total-val" style="color:${scoreColor}">
+              ${scoreSign}${result.filterScore.toFixed(1)}
+            </span>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width:${barW};background:${bColor}"></div>
+            </div>
+          </div>
+          <table class="score-details">
+            <thead>
+              <tr>
+                <th class="col-criterion">Filter</th>
+                <th class="col-section">Type</th>
+                <th class="col-val">Score</th>
+                <th class="col-bar">Weight</th>
+              </tr>
+            </thead>
+            <tbody>${filterTableRows}</tbody>
+          </table>
+        ` : ''}
+
+        ${blockHTML}
+      </div>`;
+
+    // Attach tooltip to card name
+    const nameEl = card.querySelector('.card-name');
+    if (DESCRIPTIONS[name]) attachTooltip(nameEl, DESCRIPTIONS[name]);
+
+    container.appendChild(card);
+  });
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', buildUI);
+</script>
+</body>
+</html>
