@@ -5,7 +5,7 @@
   ============================================================
   Interactive diagram of the DSA Article 40 data access
   framework for vetted researchers.
- 
+
   Standalone file — no external dependencies.
   Style: KU Leuven house style colours and typography.
   ============================================================
@@ -18,7 +18,7 @@
   <style>
     /* ── Reset & base ───────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
     :root {
       --kul-blue:       #003d6b;
       --kul-blue-dark:  #002a4a;
@@ -36,7 +36,7 @@
       --radius:         6px;
       --shadow:         0 2px 8px rgba(0,0,0,0.12);
     }
- 
+
     body {
       font-family: "Cambria", "Georgia", serif;
       background: var(--kul-xlight);
@@ -45,7 +45,7 @@
       line-height: 1.5;
       min-height: 100vh;
     }
- 
+
     /* ── Header ─────────────────────────────────────────────── */
     .site-header {
       background: var(--kul-blue);
@@ -63,7 +63,7 @@
       margin-top: 3px;
       font-style: italic;
     }
- 
+
     /* ── Legend ─────────────────────────────────────────────── */
     .legend {
       display: flex;
@@ -97,7 +97,7 @@
       border-radius: 2px;
       flex-shrink: 0;
     }
- 
+
     /* ── Main canvas ─────────────────────────────────────────── */
     .canvas-wrap {
       padding: 32px;
@@ -109,7 +109,7 @@
       max-width: 1200px;
       margin: 0 auto;
     }
- 
+
     /* ── SVG arrows overlay ──────────────────────────────────── */
     .arrows-svg {
       position: absolute;
@@ -118,7 +118,7 @@
       pointer-events: none;
       overflow: visible;
     }
- 
+
     /* ── Grid layout ─────────────────────────────────────────── */
     .grid {
       display: grid;
@@ -126,7 +126,7 @@
       grid-template-rows: auto;
       gap: 24px;
     }
- 
+
     /* ── Cards ───────────────────────────────────────────────── */
     .card {
       background: var(--white);
@@ -144,7 +144,7 @@
       box-shadow: 0 0 0 3px var(--highlight-color), var(--shadow);
     }
     .card.dimmed { opacity: .3; }
- 
+
     .card-head {
       padding: 10px 14px;
       color: var(--white);
@@ -177,7 +177,7 @@
       line-height: 1;
       top: 1px;
     }
- 
+
     /* Card colour themes */
     .theme-blue   { --card-color: var(--kul-blue);   }
     .theme-teal   { --card-color: var(--kul-teal);   }
@@ -185,10 +185,10 @@
     .theme-red    { --card-color: var(--kul-red);    }
     .theme-green  { --card-color: var(--kul-green);  }
     .theme-purple { --card-color: var(--kul-purple); }
- 
+
     .card .card-head { background: var(--card-color); }
     .card { border-top: 4px solid var(--card-color); }
- 
+
     /* ── Arrow pill labels ───────────────────────────────────── */
     .arrow-label {
       font-family: "Cambria", "Georgia", serif;
@@ -196,7 +196,7 @@
       font-style: italic;
       fill: var(--kul-mid);
     }
- 
+
     /* ── Info panel ──────────────────────────────────────────── */
     .info-panel {
       position: fixed;
@@ -218,10 +218,10 @@
     }
     .info-panel.visible { opacity: 1; }
     .info-panel h4 { font-size: 12px; margin-bottom: 5px; color: var(--white); }
- 
+
     /* ── Tooltip on hover ────────────────────────────────────── */
     .card { cursor: pointer; }
- 
+
     /* ── Annotation note ─────────────────────────────────────── */
     .note {
       font-size: 11px;
@@ -230,7 +230,7 @@
       text-align: center;
       margin-top: 20px;
     }
- 
+
     /* ── Article badge ───────────────────────────────────────── */
     .badge {
       display: inline-block;
@@ -247,13 +247,13 @@
   </style>
 </head>
 <body>
- 
+
 <!-- ── Header ────────────────────────────────────────────────── -->
 <header class="site-header">
   <h1>DSA Article 40 — Data Access Framework for Vetted Researchers</h1>
   <p>Hover over a card to highlight its connections · Click to read more</p>
 </header>
- 
+
 <!-- ── Legend ────────────────────────────────────────────────── -->
 <div class="legend">
   <span class="legend-title">Colour key</span>
@@ -279,18 +279,18 @@
     Reset
   </span>
 </div>
- 
+
 <!-- ── Canvas ─────────────────────────────────────────────────── -->
 <div class="canvas-wrap">
 <div class="canvas" id="canvas">
- 
+
   <!-- SVG arrows drawn by JS -->
   <svg class="arrows-svg" id="arrows"></svg>
- 
+
   <div class="grid">
- 
+
     <!-- ── LEFT COLUMN ──────────────────────────────────────── -->
- 
+
     <!-- Card 1: Data description -->
     <div class="card theme-blue" id="card-data"
          data-group="data"
@@ -312,7 +312,7 @@
         </ul>
       </div>
     </div>
- 
+
     <!-- Card 2: Data security -->
     <div class="card theme-blue" id="card-security"
          data-group="data"
@@ -336,7 +336,7 @@
         </ul>
       </div>
     </div>
- 
+
     <!-- Card 3: Researcher conditions -->
     <div class="card theme-teal" id="card-researcher"
          data-group="researcher"
@@ -359,7 +359,7 @@
         </ul>
       </div>
     </div>
- 
+
     <!-- Card 4: GDPR -->
     <div class="card theme-green" id="card-gdpr"
          data-group="legal"
@@ -380,11 +380,11 @@
         </ul>
       </div>
     </div>
- 
+
     <!-- Card 5: Research purposes -->
     <div class="card theme-gold" id="card-purpose"
          data-group="purpose"
-         data-connections="card-risks"
+         data-connections="card-risks,card-mitigation"
          data-info="DSA Article 40(4) — Access is granted solely for research contributing to the detection, identification and understanding of systemic risks, and the assessment of risk mitigation measures."
          onclick="cardClick('card-purpose')">
       <div class="card-head">
@@ -398,7 +398,7 @@
         </ul>
       </div>
     </div>
- 
+
     <!-- Card 6: Systemic risks -->
     <div class="card theme-gold" id="card-risks"
          data-group="purpose"
@@ -418,7 +418,7 @@
         </ul>
       </div>
     </div>
- 
+
     <!-- Card 7: Risk mitigation -->
     <div class="card theme-red" id="card-mitigation"
          data-group="mitigation"
@@ -436,7 +436,7 @@
         </ul>
       </div>
     </div>
- 
+
     <!-- Card 8: Fundamental rights -->
     <div class="card theme-purple" id="card-rights"
          data-group="rights"
@@ -459,65 +459,113 @@
         </ul>
       </div>
     </div>
- 
+
   </div><!-- /grid -->
 </div><!-- /canvas -->
 </div><!-- /canvas-wrap -->
- 
+
 <p class="note">Diagram based on the DSA (Regulation (EU) 2022/2065), DADSA, and CFREU — click any card to explore connections</p>
- 
+
 <!-- Info panel -->
 <div class="info-panel" id="info-panel">
   <h4 id="info-title"></h4>
   <p id="info-text"></p>
 </div>
- 
+
 <script>
 'use strict';
- 
-/* ── Card interaction ──────────────────────────────────────── */
+
+/* ── Draw ALL arrows on load and keep them visible ─────────── */
+function drawAllArrows() {
+  clearArrows();
+  const svg = document.getElementById('arrows');
+  const canvas = document.getElementById('canvas');
+  const canvasRect = canvas.getBoundingClientRect();
+
+  document.querySelectorAll('.card').forEach(fromCard => {
+    const connections = (fromCard.dataset.connections || '').split(',').filter(Boolean);
+    if (!connections.length) return;
+
+    connections.forEach(toId => {
+      const toCard = document.getElementById(toId);
+      if (!toCard) return;
+
+      const fromRect = fromCard.getBoundingClientRect();
+      const toRect   = toCard.getBoundingClientRect();
+
+      const fx = fromRect.left - canvasRect.left;
+      const fy = fromRect.top  - canvasRect.top;
+      const fw = fromRect.width, fh = fromRect.height;
+      const tx = toRect.left   - canvasRect.left;
+      const ty = toRect.top    - canvasRect.top;
+      const tw = toRect.width, th = toRect.height;
+
+      const fromCX = fx + fw / 2, fromCY = fy + fh / 2;
+      const toCX   = tx + tw / 2, toCY   = ty + th / 2;
+      const dx = toCX - fromCX, dy = toCY - fromCY;
+
+      let x1, y1, x2, y2;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        x1 = dx > 0 ? fx + fw : fx;   y1 = fromCY;
+        x2 = dx > 0 ? tx      : tx + tw; y2 = toCY;
+      } else {
+        x1 = fromCX; y1 = dy > 0 ? fy + fh : fy;
+        x2 = toCX;   y2 = dy > 0 ? ty      : ty + th;
+      }
+
+      const color = getComputedStyle(fromCard).getPropertyValue('--card-color').trim() || '#003d6b';
+      const colorKey = color.replace(/[^a-zA-Z0-9]/g, '');
+
+      // Create marker if not already defined
+      let defs = svg.querySelector('defs');
+      if (!defs) { defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs'); svg.appendChild(defs); }
+      if (!defs.querySelector('#arr-' + colorKey)) {
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.setAttribute('id', 'arr-' + colorKey);
+        marker.setAttribute('viewBox', '0 0 10 10');
+        marker.setAttribute('refX', '8'); marker.setAttribute('refY', '5');
+        marker.setAttribute('markerWidth', '6'); marker.setAttribute('markerHeight', '6');
+        marker.setAttribute('orient', 'auto-start-reverse');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M2 1L8 5L2 9');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', color);
+        path.setAttribute('stroke-width', '1.5');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        marker.appendChild(path);
+        defs.appendChild(marker);
+      }
+
+      const cx1 = x1 + (x2 - x1) * 0.5, cy1 = y1;
+      const cx2 = x1 + (x2 - x1) * 0.5, cy2 = y2;
+
+      const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      pathEl.setAttribute('d', `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`);
+      pathEl.setAttribute('fill', 'none');
+      pathEl.setAttribute('stroke', color);
+      pathEl.setAttribute('stroke-width', '2');
+      pathEl.setAttribute('stroke-dasharray', '5 3');
+      pathEl.setAttribute('marker-end', `url(#arr-${colorKey})`);
+      pathEl.setAttribute('opacity', '0.75');
+      svg.appendChild(pathEl);
+    });
+  });
+}
+
+/* ── Card click — show info only, no highlight/dim ──────────── */
 let activeCard = null;
- 
+
 function cardClick(id) {
   if (activeCard === id) {
-    // Second click — deselect
-    resetHighlight();
     hideInfo();
     activeCard = null;
     return;
   }
   activeCard = id;
-  highlightCard(id);
   showInfo(id);
 }
- 
-function highlightCard(id) {
-  const all = document.querySelectorAll('.card');
-  const card = document.getElementById(id);
-  const connections = (card.dataset.connections || '').split(',').filter(Boolean);
-  const active = new Set([id, ...connections]);
- 
-  all.forEach(c => {
-    c.classList.remove('highlighted', 'dimmed');
-    if (active.has(c.id)) {
-      c.classList.add('highlighted');
-      const color = getComputedStyle(c).getPropertyValue('--card-color').trim();
-      c.style.setProperty('--highlight-color', color);
-    } else {
-      c.classList.add('dimmed');
-    }
-  });
- 
-  drawArrows(id);
-}
- 
-function resetHighlight() {
-  document.querySelectorAll('.card').forEach(c => {
-    c.classList.remove('highlighted', 'dimmed');
-  });
-  clearArrows();
-}
- 
+
 function showInfo(id) {
   const card = document.getElementById(id);
   const panel = document.getElementById('info-panel');
@@ -526,139 +574,33 @@ function showInfo(id) {
   document.getElementById('info-text').textContent = card.dataset.info || '';
   panel.classList.add('visible');
 }
- 
+
 function hideInfo() {
   document.getElementById('info-panel').classList.remove('visible');
 }
- 
-/* ── Group filter via legend ───────────────────────────────── */
+
+/* ── Group filter — highlight only, no dimming ──────────────── */
 function filterGroup(group) {
-  resetHighlight();
   hideInfo();
   activeCard = null;
-  if (!group) return;
- 
   document.querySelectorAll('.card').forEach(c => {
     c.classList.remove('highlighted', 'dimmed');
-    if (c.dataset.group === group) {
-      c.classList.add('highlighted');
-    } else {
-      c.classList.add('dimmed');
-    }
   });
 }
- 
-/* ── Arrow drawing ─────────────────────────────────────────── */
-function clearArrows() {
-  document.getElementById('arrows').innerHTML = '';
-}
- 
-function drawArrows(fromId) {
-  clearArrows();
-  const svg = document.getElementById('arrows');
-  const canvas = document.getElementById('canvas');
-  const canvasRect = canvas.getBoundingClientRect();
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
- 
-  const fromCard = document.getElementById(fromId);
-  const connections = (fromCard.dataset.connections || '').split(',').filter(Boolean);
- 
-  // Define a marker per colour
-  const usedColors = new Set();
- 
-  connections.forEach(toId => {
-    const toCard = document.getElementById(toId);
-    if (!toCard) return;
- 
-    const fromRect = fromCard.getBoundingClientRect();
-    const toRect   = toCard.getBoundingClientRect();
- 
-    // Adjust for canvas offset and scroll
-    const fx = fromRect.left - canvasRect.left + scrollLeft - (canvas.getBoundingClientRect().left - canvasRect.left);
-    const fy = fromRect.top  - canvasRect.top  + scrollTop  - (canvas.getBoundingClientRect().top  - canvasRect.top);
-    const fw = fromRect.width, fh = fromRect.height;
-    const tx = toRect.left   - canvasRect.left + scrollLeft - (canvas.getBoundingClientRect().left - canvasRect.left);
-    const ty = toRect.top    - canvasRect.top  + scrollTop  - (canvas.getBoundingClientRect().top  - canvasRect.top);
-    const tw = toRect.width, th = toRect.height;
- 
-    // Attach points: right-center of from, left-center of to (or top/bottom for same column)
-    let x1, y1, x2, y2;
-    const fromCX = fx + fw / 2, fromCY = fy + fh / 2;
-    const toCX   = tx + tw / 2, toCY   = ty + th / 2;
-    const dx = toCX - fromCX, dy = toCY - fromCY;
- 
-    if (Math.abs(dx) > Math.abs(dy)) {
-      // Horizontal: exit right or left
-      x1 = dx > 0 ? fx + fw : fx;
-      y1 = fromCY;
-      x2 = dx > 0 ? tx      : tx + tw;
-      y2 = toCY;
-    } else {
-      // Vertical: exit bottom or top
-      x1 = fromCX;
-      y1 = dy > 0 ? fy + fh : fy;
-      x2 = toCX;
-      y2 = dy > 0 ? ty      : ty + th;
-    }
- 
-    const color = getComputedStyle(fromCard).getPropertyValue('--card-color').trim() || '#003d6b';
-    const colorKey = color.replace(/[^a-zA-Z0-9]/g, '');
- 
-    if (!usedColors.has(colorKey)) {
-      usedColors.add(colorKey);
-      const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-      marker.setAttribute('id', 'arr-' + colorKey);
-      marker.setAttribute('viewBox', '0 0 10 10');
-      marker.setAttribute('refX', '8');
-      marker.setAttribute('refY', '5');
-      marker.setAttribute('markerWidth', '6');
-      marker.setAttribute('markerHeight', '6');
-      marker.setAttribute('orient', 'auto-start-reverse');
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', 'M2 1L8 5L2 9');
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', color);
-      path.setAttribute('stroke-width', '1.5');
-      path.setAttribute('stroke-linecap', 'round');
-      path.setAttribute('stroke-linejoin', 'round');
-      marker.appendChild(path);
-      let defs = svg.querySelector('defs');
-      if (!defs) { defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs'); svg.appendChild(defs); }
-      defs.appendChild(marker);
-    }
- 
-    // Bezier control points
-    const cx1 = x1 + (x2 - x1) * 0.5;
-    const cy1 = y1;
-    const cx2 = x1 + (x2 - x1) * 0.5;
-    const cy2 = y2;
- 
-    const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    pathEl.setAttribute('d', `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`);
-    pathEl.setAttribute('fill', 'none');
-    pathEl.setAttribute('stroke', color);
-    pathEl.setAttribute('stroke-width', '2');
-    pathEl.setAttribute('stroke-dasharray', '5 3');
-    pathEl.setAttribute('marker-end', `url(#arr-${colorKey})`);
-    pathEl.setAttribute('opacity', '0.8');
-    svg.appendChild(pathEl);
-  });
-}
- 
-/* Close panel when clicking outside */
+
+/* Close info panel when clicking outside a card */
 document.addEventListener('click', e => {
   if (!e.target.closest('.card') && !e.target.closest('.legend-item')) {
-    resetHighlight();
     hideInfo();
     activeCard = null;
   }
 });
- 
-/* Redraw on resize */
-window.addEventListener('resize', () => {
-  if (activeCard) drawArrows(activeCard);
-});
+
+/* Redraw arrows on resize */
+window.addEventListener('resize', drawAllArrows);
+
+/* Draw all arrows on load */
+window.addEventListener('load', drawAllArrows);
 </script>
 </body>
 </html>
