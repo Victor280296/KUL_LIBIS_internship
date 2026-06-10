@@ -5,301 +5,252 @@
   ============================================================
   Interactive diagram of the DSA Article 40 data access
   framework for vetted researchers.
-
-  Standalone file — no external dependencies.
-  Style: KU Leuven house style colours and typography.
+ 
+  Behaviour:
+  - Page loads showing only card titles (collapsed)
+  - Click a title → expand content + description shown permanently
+  - Hover a closed title → description appears temporarily
+  - Arrows always visible, stable, redraw smoothly during expand
+  - All KUL blue, Cambria font
+  - Standalone — no dependencies
   ============================================================
 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DSA Data Access Framework</title>
+  <title>DSA Article 40 — Data Access Framework</title>
   <style>
-    /* ── Reset & base ───────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
     :root {
-      --kul-blue:       #003d6b;
-      --kul-blue-dark:  #002a4a;
-      --kul-blue-mid:   #0090d4;
-      --kul-blue-light: #d6e8f5;
-      --kul-teal:       #00807f;
-      --kul-gold:       #b5820a;
-      --kul-red:        #b5190a;
-      --kul-green:      #2e7d32;
-      --kul-purple:     #5c2d91;
-      --kul-mid:        #6b6b6b;
-      --kul-light:      #e8e6e2;
-      --kul-xlight:     #f5f4f1;
-      --white:          #ffffff;
-      --radius:         6px;
-      --shadow:         0 2px 8px rgba(0,0,0,0.12);
+      --blue:        #003d6b;
+      --blue-mid:    #0a5a99;
+      --blue-hover:  #0d6ab8;
+      --blue-light:  #d6e8f5;
+      --blue-xlight: #eef5fb;
+      --white:       #ffffff;
+      --text-muted:  rgba(255,255,255,0.80);
+      --shadow:      0 2px 10px rgba(0,0,0,0.15);
+      --radius:      4px;
+      --transition:  0.38s ease;
     }
-
+ 
     body {
       font-family: "Cambria", "Georgia", serif;
-      background: var(--kul-xlight);
-      color: var(--kul-blue-dark);
-      font-size: 14px;
-      line-height: 1.5;
+      background: var(--blue-xlight);
+      color: var(--blue);
       min-height: 100vh;
     }
-
-    /* ── Header ─────────────────────────────────────────────── */
+ 
+    /* ── Header ──────────────────────────────────────────────── */
     .site-header {
-      background: var(--kul-blue);
+      background: var(--blue);
       color: var(--white);
-      padding: 16px 32px;
+      padding: 18px 40px 14px;
     }
-    .site-header h1 {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: .01em;
+    .site-header h1 { font-size: 18px; font-weight: 700; }
+    .site-header p  { font-size: 11px; color: var(--text-muted); margin-top: 5px; font-style: italic; }
+ 
+    /* ── Main layout ─────────────────────────────────────────── */
+    .page-body {
+      padding: 44px 40px 60px;
     }
-    .site-header p {
-      font-size: 12px;
-      color: var(--kul-blue-light);
-      margin-top: 3px;
-      font-style: italic;
-    }
-
-    /* ── Legend ─────────────────────────────────────────────── */
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      padding: 12px 32px;
-      background: var(--white);
-      border-bottom: 1px solid var(--kul-light);
-      font-size: 11px;
-      align-items: center;
-    }
-    .legend-title {
-      font-weight: 700;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--kul-mid);
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      padding: 3px 8px;
-      border-radius: 3px;
-      transition: background .15s;
-    }
-    .legend-item:hover { background: var(--kul-xlight); }
-    .legend-dot {
-      width: 12px; height: 12px;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-
-    /* ── Main canvas ─────────────────────────────────────────── */
-    .canvas-wrap {
-      padding: 32px;
-      overflow-x: auto;
-    }
-    .canvas {
+ 
+    /*
+      The diagram is laid out as a CSS grid (2 cols).
+      The SVG arrow canvas is a separate absolutely-positioned
+      element that covers the same area — we measure card
+      positions relative to the grid container.
+    */
+    .diagram-wrap {
       position: relative;
-      min-width: 900px;
-      max-width: 1200px;
+      max-width: 1060px;
       margin: 0 auto;
     }
-
-    /* ── SVG arrows overlay ──────────────────────────────────── */
-    .arrows-svg {
+ 
+    /* Arrow canvas — sits behind cards, covers full diagram area */
+    #arrow-canvas {
       position: absolute;
       top: 0; left: 0;
-      width: 100%; height: 100%;
+      width: 100%;
+      /* height set by JS to match grid */
       pointer-events: none;
+      z-index: 0;
       overflow: visible;
     }
-
-    /* ── Grid layout ─────────────────────────────────────────── */
+ 
+    /* Card grid */
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto;
-      gap: 24px;
+      gap: 28px 72px;
+      position: relative;
+      z-index: 1;
+      align-items: start;  /* cards don't stretch to fill row height */
     }
-
-    /* ── Cards ───────────────────────────────────────────────── */
+ 
+    /* ── Card ────────────────────────────────────────────────── */
     .card {
-      background: var(--white);
+      background: var(--blue);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
-      transition: transform .15s, box-shadow .15s;
-      position: relative;
     }
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.16);
-    }
-    .card.highlighted {
-      box-shadow: 0 0 0 3px var(--highlight-color), var(--shadow);
-    }
-    .card.dimmed { opacity: .3; }
-
+ 
+    /* ── Card header ─────────────────────────────────────────── */
     .card-head {
-      padding: 10px 14px;
-      color: var(--white);
-      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s;
+    }
+    .card-head:hover { background: var(--blue-hover); }
+ 
+    .card-title {
       font-size: 13px;
-      letter-spacing: .01em;
+      font-weight: 700;
+      color: var(--white);
+      flex: 1;
+      line-height: 1.3;
     }
+ 
+    .card-badge {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-style: italic;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+ 
+    .card-chevron {
+      color: var(--text-muted);
+      font-size: 11px;
+      flex-shrink: 0;
+      transition: transform var(--transition);
+    }
+    .card.open .card-chevron { transform: rotate(180deg); }
+ 
+    /* ── Description strip ───────────────────────────────────── */
+    /*
+      Three states:
+        hidden    → closed card, not hovering
+        .hovering → closed card, mouse over title (transient)
+        .open     → card is expanded (permanent, overrides hover)
+    */
+    .card-desc {
+      background: var(--blue-mid);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-style: italic;
+      line-height: 1.55;
+      padding: 0 16px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--transition), padding var(--transition);
+    }
+    /* Show on hover (transient) */
+    .card-desc.hovering {
+      max-height: 80px;
+      padding: 8px 16px;
+    }
+    /* Show permanently when card is open */
+    .card.open .card-desc {
+      max-height: 80px;
+      padding: 8px 16px;
+    }
+ 
+    /* ── Expandable body ─────────────────────────────────────── */
     .card-body {
-      padding: 12px 14px;
+      background: var(--white);
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height var(--transition), padding var(--transition);
     }
+    .card.open .card-body {
+      max-height: 500px;
+      padding: 13px 16px;
+    }
+ 
     .card-body ul {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
     .card-body ul li {
       font-size: 12px;
       line-height: 1.45;
+      color: var(--blue);
       padding-left: 14px;
       position: relative;
-      color: var(--kul-blue-dark);
     }
     .card-body ul li::before {
       content: '·';
       position: absolute;
       left: 0;
-      color: var(--kul-mid);
-      font-size: 16px;
-      line-height: 1;
-      top: 1px;
+      color: var(--blue-mid);
+      font-size: 18px;
+      line-height: 0.85;
     }
-
-    /* Card colour themes */
-    .theme-blue   { --card-color: var(--kul-blue);   }
-    .theme-teal   { --card-color: var(--kul-teal);   }
-    .theme-gold   { --card-color: var(--kul-gold);   }
-    .theme-red    { --card-color: var(--kul-red);    }
-    .theme-green  { --card-color: var(--kul-green);  }
-    .theme-purple { --card-color: var(--kul-purple); }
-
-    .card .card-head { background: var(--card-color); }
-    .card { border-top: 4px solid var(--card-color); }
-
-    /* ── Arrow pill labels ───────────────────────────────────── */
-    .arrow-label {
-      font-family: "Cambria", "Georgia", serif;
-      font-size: 10px;
-      font-style: italic;
-      fill: var(--kul-mid);
-    }
-
-    /* ── Info panel ──────────────────────────────────────────── */
-    .info-panel {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--kul-blue-dark);
-      color: var(--kul-blue-light);
-      padding: 12px 16px;
-      border-radius: var(--radius);
-      font-size: 11px;
-      max-width: 280px;
-      line-height: 1.6;
-      box-shadow: var(--shadow);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s;
-      font-family: "Cambria", "Georgia", serif;
-      z-index: 100;
-    }
-    .info-panel.visible { opacity: 1; }
-    .info-panel h4 { font-size: 12px; margin-bottom: 5px; color: var(--white); }
-
-    /* ── Tooltip on hover ────────────────────────────────────── */
-    .card { cursor: pointer; }
-
-    /* ── Annotation note ─────────────────────────────────────── */
+ 
+    /* ── Footer ──────────────────────────────────────────────── */
     .note {
       font-size: 11px;
-      color: var(--kul-mid);
+      color: #8a8a8a;
       font-style: italic;
       text-align: center;
-      margin-top: 20px;
-    }
-
-    /* ── Article badge ───────────────────────────────────────── */
-    .badge {
-      display: inline-block;
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      padding: 2px 7px;
-      border-radius: 3px;
-      margin-bottom: 5px;
-      background: rgba(255,255,255,0.2);
-      color: var(--white);
+      margin-top: 28px;
     }
   </style>
 </head>
 <body>
-
-<!-- ── Header ────────────────────────────────────────────────── -->
+ 
 <header class="site-header">
   <h1>DSA Article 40 — Data Access Framework for Vetted Researchers</h1>
-  <p>Hover over a card to highlight its connections · Click to read more</p>
+  <p>Click a card to expand · Hover a title to preview its description</p>
 </header>
-
-<!-- ── Legend ────────────────────────────────────────────────── -->
-<div class="legend">
-  <span class="legend-title">Colour key</span>
-  <span class="legend-item" onclick="filterGroup('data')">
-    <span class="legend-dot" style="background:var(--kul-blue)"></span>Data description
-  </span>
-  <span class="legend-item" onclick="filterGroup('researcher')">
-    <span class="legend-dot" style="background:var(--kul-teal)"></span>Researcher conditions
-  </span>
-  <span class="legend-item" onclick="filterGroup('purpose')">
-    <span class="legend-dot" style="background:var(--kul-gold)"></span>Research purposes
-  </span>
-  <span class="legend-item" onclick="filterGroup('mitigation')">
-    <span class="legend-dot" style="background:var(--kul-red)"></span>Risk mitigation
-  </span>
-  <span class="legend-item" onclick="filterGroup('legal')">
-    <span class="legend-dot" style="background:var(--kul-green)"></span>Legal frameworks
-  </span>
-  <span class="legend-item" onclick="filterGroup('rights')">
-    <span class="legend-dot" style="background:var(--kul-purple)"></span>Fundamental rights
-  </span>
-  <span class="legend-item" onclick="filterGroup(null)" style="margin-left:8px;font-style:italic;color:var(--kul-mid)">
-    Reset
-  </span>
-</div>
-
-<!-- ── Canvas ─────────────────────────────────────────────────── -->
-<div class="canvas-wrap">
-<div class="canvas" id="canvas">
-
-  <!-- SVG arrows drawn by JS -->
-  <svg class="arrows-svg" id="arrows"></svg>
-
-  <div class="grid">
-
-    <!-- ── LEFT COLUMN ──────────────────────────────────────── -->
-
-    <!-- Card 1: Data description -->
-    <div class="card theme-blue" id="card-data"
-         data-group="data"
-         data-connections="card-security"
-         data-info="DADSA Article 8(c) — The data requested must be precisely described, including its format, scope, specific attributes, metadata, and documentation."
-         onclick="cardClick('card-data')">
-      <div class="card-head">
-        <div class="badge">DADSA 8(c)</div><br>
-        Description of data requested
+ 
+<div class="page-body">
+<div class="diagram-wrap" id="diagram-wrap">
+ 
+  <!-- Arrow SVG layer (populated by JS) -->
+  <svg id="arrow-canvas"></svg>
+ 
+  <div class="grid" id="grid">
+ 
+    <!--
+      Grid positions (row, column):
+        [card-data]        [card-security]
+        [card-researcher]  [card-gdpr]
+        [card-purpose]     [card-risks]
+        [card-mitigation]  [card-rights]
+ 
+      Connections (matching the schema):
+        card-data        → card-security        (horizontal →)
+        card-researcher  → card-security        (diagonal ↗)
+        card-researcher  → card-purpose         (vertical ↓ same col)
+        card-security    → card-gdpr            (vertical ↓ same col)
+        card-purpose     → card-risks           (horizontal →)
+        card-purpose     → card-mitigation      (vertical ↓ same col)
+        card-risks       → card-rights          (vertical ↓ same col)
+    -->
+ 
+    <!-- ── Row 1 ── -->
+    <div class="card" id="card-data">
+      <div class="card-head"
+           onclick="toggleCard('card-data')"
+           onmouseenter="startHover('card-data')"
+           onmouseleave="endHover('card-data')">
+        <span class="card-title">Description of data requested</span>
+        <span class="card-badge">DADSA 8(c)</span>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-desc" id="desc-card-data">
+        DADSA Art. 8(c) — The data requested must be precisely described: its format, scope, specific attributes, metadata, and documentation requirements.
       </div>
       <div class="card-body">
         <ul>
@@ -312,16 +263,18 @@
         </ul>
       </div>
     </div>
-
-    <!-- Card 2: Data security -->
-    <div class="card theme-blue" id="card-security"
-         data-group="data"
-         data-connections="card-gdpr"
-         data-info="DADSA Article 9(4) — Researchers must demonstrate robust data security measures, covering confidentiality, storage, organisational safeguards, and secure processing environments."
-         onclick="cardClick('card-security')">
-      <div class="card-head">
-        <div class="badge">DADSA 9(4)</div><br>
-        Data security
+ 
+    <div class="card" id="card-security">
+      <div class="card-head"
+           onclick="toggleCard('card-security')"
+           onmouseenter="startHover('card-security')"
+           onmouseleave="endHover('card-security')">
+        <span class="card-title">Data security</span>
+        <span class="card-badge">DADSA 9(4)</span>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-desc" id="desc-card-security">
+        DADSA Art. 9(4) — Researchers must demonstrate robust data security covering confidentiality, storage periods, organisational safeguards, and secure processing environments.
       </div>
       <div class="card-body">
         <ul>
@@ -331,121 +284,136 @@
           <li>Storage period and destruction plan</li>
           <li>Restriction of access and information sharing</li>
           <li>Contractual clauses (NDAs, data agreements)</li>
-          <li>Researcher trained on data security</li>
+          <li>Researcher trained on data security and personal data protection</li>
           <li>Whether a secure processing environment is necessary</li>
         </ul>
       </div>
     </div>
-
-    <!-- Card 3: Researcher conditions -->
-    <div class="card theme-teal" id="card-researcher"
-         data-group="researcher"
-         data-connections="card-security,card-purpose"
-         data-info="DSA Article 40(8) — Researchers must meet seven conditions to be eligible as vetted researchers: institutional affiliation, independence, funding disclosure, data security, proportionality, research purpose, and public availability of results."
-         onclick="cardClick('card-researcher')">
-      <div class="card-head">
-        <div class="badge">DSA 40(8)</div><br>
-        Researcher conditions
+ 
+    <!-- ── Row 2 ── -->
+    <div class="card" id="card-researcher">
+      <div class="card-head"
+           onclick="toggleCard('card-researcher')"
+           onmouseenter="startHover('card-researcher')"
+           onmouseleave="endHover('card-researcher')">
+        <span class="card-title">Researcher conditions</span>
+        <span class="card-badge">DSA 40(8)</span>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-desc" id="desc-card-researcher">
+        DSA Art. 40(8) — Seven eligibility conditions to qualify as a vetted researcher: institutional affiliation, independence, funding disclosure, data security, proportionality, research purpose, and open results.
       </div>
       <div class="card-body">
         <ul>
           <li>(a) Affiliated to a research organisation</li>
           <li>(b) Independent from commercial interests</li>
           <li>(c) Discloses funding of research</li>
-          <li>(d) Fulfils data security and confidentiality</li>
-          <li>(e) Requested data is necessary and proportionate</li>
+          <li>(d) Fulfils data security and confidentiality requirements</li>
+          <li>(e) Requested data is necessary and proportionate to the research</li>
           <li>(f) Research activities follow the purposes of §4</li>
           <li>(g) Research results will be publicly available</li>
         </ul>
       </div>
     </div>
-
-    <!-- Card 4: GDPR -->
-    <div class="card theme-green" id="card-gdpr"
-         data-group="legal"
-         data-connections="card-rights"
-         data-info="The GDPR provides the overarching legal framework for personal data protection applicable to the data access process, with specific provisions for research purposes."
-         onclick="cardClick('card-gdpr')">
-      <div class="card-head">
-        <div class="badge">Legal framework</div><br>
-        GDPR
+ 
+    <div class="card" id="card-gdpr">
+      <div class="card-head"
+           onclick="toggleCard('card-gdpr')"
+           onmouseenter="startHover('card-gdpr')"
+           onmouseleave="endHover('card-gdpr')">
+        <span class="card-title">GDPR</span>
+        <span class="card-badge">Legal framework</span>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-desc" id="desc-card-gdpr">
+        The GDPR provides the overarching legal framework for personal data protection, with specific provisions enabling and constraining research data access.
       </div>
       <div class="card-body">
         <ul>
-          <li>Art. 5(f): appropriate security of personal data</li>
-          <li>Art. 9(2): exceptions for data prohibited to process if made public by the data subject and if necessary for public interest</li>
+          <li>Art. 5(f): processed in a manner ensuring appropriate security of personal data</li>
+          <li>Art. 9(2): exceptions for data prohibited to process if made public by data subject and necessary for public interest</li>
           <li>Art. 32: technical and organisational security measures</li>
-          <li>Art. 35(7): impact assessment requirements</li>
+          <li>Art. 35(7): what the impact assessment should contain</li>
           <li>Art. 89: derogations for research (arts. 15, 16, 18 and 21)</li>
         </ul>
       </div>
     </div>
-
-    <!-- Card 5: Research purposes -->
-    <div class="card theme-gold" id="card-purpose"
-         data-group="purpose"
-         data-connections="card-risks,card-mitigation"
-         data-info="DSA Article 40(4) — Access is granted solely for research contributing to the detection, identification and understanding of systemic risks, and the assessment of risk mitigation measures."
-         onclick="cardClick('card-purpose')">
-      <div class="card-head">
-        <div class="badge">DSA 40(4)</div><br>
-        Research purposes
+ 
+    <!-- ── Row 3 ── -->
+    <div class="card" id="card-purpose">
+      <div class="card-head"
+           onclick="toggleCard('card-purpose')"
+           onmouseenter="startHover('card-purpose')"
+           onmouseleave="endHover('card-purpose')">
+        <span class="card-title">Research purposes</span>
+        <span class="card-badge">DSA 40(4)</span>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-desc" id="desc-card-purpose">
+        DSA Art. 40(4) — Access is granted solely for research contributing to the detection, identification and understanding of systemic risks, and the assessment of risk mitigation measures.
       </div>
       <div class="card-body">
         <ul>
-          <li>Detection, identification and understanding of systemic risks</li>
+          <li>Detection, identification and understanding of systemic risks in the Union</li>
           <li>Assessment of the adequacy, efficiency and impacts of risk mitigation measures</li>
         </ul>
       </div>
     </div>
-
-    <!-- Card 6: Systemic risks -->
-    <div class="card theme-gold" id="card-risks"
-         data-group="purpose"
-         data-connections="card-rights,card-mitigation"
-         data-info="DSA Article 34(1) — Defines four categories of systemic risks that platforms must assess and researchers may study."
-         onclick="cardClick('card-risks')">
-      <div class="card-head">
-        <div class="badge">DSA 34(1)</div><br>
-        Systemic risks
+ 
+    <div class="card" id="card-risks">
+      <div class="card-head"
+           onclick="toggleCard('card-risks')"
+           onmouseenter="startHover('card-risks')"
+           onmouseleave="endHover('card-risks')">
+        <span class="card-title">Systemic risks</span>
+        <span class="card-badge">DSA 34(1)</span>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-desc" id="desc-card-risks">
+        DSA Art. 34(1) — Four categories of systemic risks that VLOPs must assess and that researchers may study under the vetted researcher procedure.
       </div>
       <div class="card-body">
         <ul>
           <li>(a) Dissemination of illegal content</li>
-          <li>(b) Negative effects on fundamental rights</li>
+          <li>(b) Negative effects on the exercise of fundamental rights</li>
           <li>(c) Negative effects on civic discourse, electoral processes and public security</li>
-          <li>(d) Gender-based violence, threats to public health, minors, and mental well-being</li>
+          <li>(d) Gender-based violence, threats to public health, protection of minors and mental well-being</li>
         </ul>
       </div>
     </div>
-
-    <!-- Card 7: Risk mitigation -->
-    <div class="card theme-red" id="card-mitigation"
-         data-group="mitigation"
-         data-connections=""
-         data-info="DSA Article 35 — Platforms must implement risk mitigation measures tailored to identified systemic risks, and publish annual comprehensive reports."
-         onclick="cardClick('card-mitigation')">
-      <div class="card-head">
-        <div class="badge">DSA 35</div><br>
-        Risk mitigation
+ 
+    <!-- ── Row 4 ── -->
+    <div class="card" id="card-mitigation">
+      <div class="card-head"
+           onclick="toggleCard('card-mitigation')"
+           onmouseenter="startHover('card-mitigation')"
+           onmouseleave="endHover('card-mitigation')">
+        <span class="card-title">Risk mitigation</span>
+        <span class="card-badge">DSA 35</span>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-desc" id="desc-card-mitigation">
+        DSA Art. 35 — Platforms must implement mitigation measures proportionate to identified systemic risks, and publish comprehensive annual reports on their risk assessments.
       </div>
       <div class="card-body">
         <ul>
-          <li>(1) Mitigation measures tailored to the specific systemic risks</li>
+          <li>(1) Mitigation measures tailored to the specific systemic risks identified</li>
           <li>(2) Publication of comprehensive annual reports</li>
         </ul>
       </div>
     </div>
-
-    <!-- Card 8: Fundamental rights -->
-    <div class="card theme-purple" id="card-rights"
-         data-group="rights"
-         data-connections=""
-         data-info="Charter of Fundamental Rights of the European Union — The systemic risk framework is anchored in the protection of these seven fundamental rights."
-         onclick="cardClick('card-rights')">
-      <div class="card-head">
-        <div class="badge">CFREU</div><br>
-        Fundamental rights
+ 
+    <div class="card" id="card-rights">
+      <div class="card-head"
+           onclick="toggleCard('card-rights')"
+           onmouseenter="startHover('card-rights')"
+           onmouseleave="endHover('card-rights')">
+        <span class="card-title">Fundamental rights</span>
+        <span class="card-badge">CFREU</span>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-desc" id="desc-card-rights">
+        Charter of Fundamental Rights of the EU — The systemic risk framework is anchored in the protection of these seven rights enumerated in DSA Art. 34(1)(b).
       </div>
       <div class="card-body">
         <ul>
@@ -459,148 +427,178 @@
         </ul>
       </div>
     </div>
-
+ 
   </div><!-- /grid -->
-</div><!-- /canvas -->
-</div><!-- /canvas-wrap -->
-
-<p class="note">Diagram based on the DSA (Regulation (EU) 2022/2065), DADSA, and CFREU — click any card to explore connections</p>
-
-<!-- Info panel -->
-<div class="info-panel" id="info-panel">
-  <h4 id="info-title"></h4>
-  <p id="info-text"></p>
-</div>
-
+</div><!-- /diagram-wrap -->
+ 
+<p class="note">Based on the DSA (Regulation (EU) 2022/2065), DADSA, and CFREU</p>
+</div><!-- /page-body -->
+ 
 <script>
 'use strict';
-
-/* ── Draw ALL arrows on load and keep them visible ─────────── */
-function drawAllArrows() {
-  clearArrows();
-  const svg = document.getElementById('arrows');
-  const canvas = document.getElementById('canvas');
-  const canvasRect = canvas.getBoundingClientRect();
-
-  document.querySelectorAll('.card').forEach(fromCard => {
-    const connections = (fromCard.dataset.connections || '').split(',').filter(Boolean);
-    if (!connections.length) return;
-
-    connections.forEach(toId => {
-      const toCard = document.getElementById(toId);
-      if (!toCard) return;
-
-      const fromRect = fromCard.getBoundingClientRect();
-      const toRect   = toCard.getBoundingClientRect();
-
-      const fx = fromRect.left - canvasRect.left;
-      const fy = fromRect.top  - canvasRect.top;
-      const fw = fromRect.width, fh = fromRect.height;
-      const tx = toRect.left   - canvasRect.left;
-      const ty = toRect.top    - canvasRect.top;
-      const tw = toRect.width, th = toRect.height;
-
-      const fromCX = fx + fw / 2, fromCY = fy + fh / 2;
-      const toCX   = tx + tw / 2, toCY   = ty + th / 2;
-      const dx = toCX - fromCX, dy = toCY - fromCY;
-
-      let x1, y1, x2, y2;
-      if (Math.abs(dx) > Math.abs(dy)) {
-        x1 = dx > 0 ? fx + fw : fx;   y1 = fromCY;
-        x2 = dx > 0 ? tx      : tx + tw; y2 = toCY;
-      } else {
-        x1 = fromCX; y1 = dy > 0 ? fy + fh : fy;
-        x2 = toCX;   y2 = dy > 0 ? ty      : ty + th;
-      }
-
-      const color = getComputedStyle(fromCard).getPropertyValue('--card-color').trim() || '#003d6b';
-      const colorKey = color.replace(/[^a-zA-Z0-9]/g, '');
-
-      // Create marker if not already defined
-      let defs = svg.querySelector('defs');
-      if (!defs) { defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs'); svg.appendChild(defs); }
-      if (!defs.querySelector('#arr-' + colorKey)) {
-        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-        marker.setAttribute('id', 'arr-' + colorKey);
-        marker.setAttribute('viewBox', '0 0 10 10');
-        marker.setAttribute('refX', '8'); marker.setAttribute('refY', '5');
-        marker.setAttribute('markerWidth', '6'); marker.setAttribute('markerHeight', '6');
-        marker.setAttribute('orient', 'auto-start-reverse');
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', 'M2 1L8 5L2 9');
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', color);
-        path.setAttribute('stroke-width', '1.5');
-        path.setAttribute('stroke-linecap', 'round');
-        path.setAttribute('stroke-linejoin', 'round');
-        marker.appendChild(path);
-        defs.appendChild(marker);
-      }
-
-      const cx1 = x1 + (x2 - x1) * 0.5, cy1 = y1;
-      const cx2 = x1 + (x2 - x1) * 0.5, cy2 = y2;
-
-      const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      pathEl.setAttribute('d', `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`);
-      pathEl.setAttribute('fill', 'none');
-      pathEl.setAttribute('stroke', color);
-      pathEl.setAttribute('stroke-width', '2');
-      pathEl.setAttribute('stroke-dasharray', '5 3');
-      pathEl.setAttribute('marker-end', `url(#arr-${colorKey})`);
-      pathEl.setAttribute('opacity', '0.75');
-      svg.appendChild(pathEl);
-    });
-  });
+ 
+/* ============================================================
+   CONNECTIONS
+   Each entry: from-id → [to-ids]
+   Must match the schema arrows exactly.
+   ============================================================ */
+const CONNECTIONS = [
+  { from: 'card-data',       to: 'card-security'   },  // horizontal →
+  { from: 'card-researcher', to: 'card-data'        },  // vertical   ↑ same col
+  { from: 'card-researcher', to: 'card-security'   },  // diagonal   ↗
+  { from: 'card-researcher', to: 'card-purpose'    },  // vertical   ↓ same col
+  { from: 'card-security',   to: 'card-gdpr'       },  // vertical   ↓ same col
+  { from: 'card-purpose',    to: 'card-risks'      },  // horizontal →
+  { from: 'card-purpose',    to: 'card-mitigation' },  // vertical   ↓ same col
+  { from: 'card-risks',      to: 'card-rights'     },  // vertical   ↓ same col
+];
+ 
+/* ============================================================
+   HOVER — description shown temporarily for closed cards
+   ============================================================ */
+const hoverTimers = {};
+ 
+function startHover(id) {
+  clearTimeout(hoverTimers[id]);
+  hoverTimers[id] = setTimeout(() => {
+    const card = document.getElementById(id);
+    // Only show hover state if card is NOT open (open handles it via CSS)
+    if (!card.classList.contains('open')) {
+      document.getElementById('desc-' + id).classList.add('hovering');
+    }
+  }, 700);
 }
-
-/* ── Card click — show info only, no highlight/dim ──────────── */
-let activeCard = null;
-
-function cardClick(id) {
-  if (activeCard === id) {
-    hideInfo();
-    activeCard = null;
-    return;
-  }
-  activeCard = id;
-  showInfo(id);
+ 
+function endHover(id) {
+  clearTimeout(hoverTimers[id]);
+  document.getElementById('desc-' + id).classList.remove('hovering');
 }
-
-function showInfo(id) {
+ 
+/* ============================================================
+   EXPAND / COLLAPSE
+   ============================================================ */
+function toggleCard(id) {
   const card = document.getElementById(id);
-  const panel = document.getElementById('info-panel');
-  document.getElementById('info-title').textContent =
-    card.querySelector('.card-head').innerText.replace(/^[A-Z0-9().\s]+\n/, '').trim();
-  document.getElementById('info-text').textContent = card.dataset.info || '';
-  panel.classList.add('visible');
+  const wasOpen = card.classList.contains('open');
+ 
+  card.classList.toggle('open');
+ 
+  // Remove hover state — the open CSS handles the description now
+  document.getElementById('desc-' + id).classList.remove('hovering');
+ 
+  // Continuously redraw arrows for the full duration of the CSS transition
+  animateArrows(420);
 }
-
-function hideInfo() {
-  document.getElementById('info-panel').classList.remove('visible');
+ 
+/* ============================================================
+   ARROW DRAWING
+   ============================================================ */
+ 
+/**
+ * Get a card's position relative to the diagram-wrap container.
+ * Uses offsetTop/offsetLeft chain — accurate regardless of scroll.
+ */
+function getRelPos(el, container) {
+  let left = 0, top = 0, cur = el;
+  while (cur && cur !== container) {
+    left += cur.offsetLeft;
+    top  += cur.offsetTop;
+    cur   = cur.offsetParent;
+  }
+  return { left, top, w: el.offsetWidth, h: el.offsetHeight };
 }
-
-/* ── Group filter — highlight only, no dimming ──────────────── */
-function filterGroup(group) {
-  hideInfo();
-  activeCard = null;
-  document.querySelectorAll('.card').forEach(c => {
-    c.classList.remove('highlighted', 'dimmed');
+ 
+function drawAllArrows() {
+  const svg       = document.getElementById('arrow-canvas');
+  const wrap      = document.getElementById('diagram-wrap');
+  const wrapH     = wrap.offsetHeight;
+  const wrapW     = wrap.offsetWidth;
+ 
+  // Size the SVG to match the container
+  svg.setAttribute('width',   wrapW);
+  svg.setAttribute('height',  wrapH);
+  svg.setAttribute('viewBox', `0 0 ${wrapW} ${wrapH}`);
+ 
+  // Clear and rebuild
+  svg.innerHTML = '';
+ 
+  // Shared arrowhead marker
+  svg.innerHTML = `
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#003d6b"
+              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>`;
+ 
+  CONNECTIONS.forEach(({ from, to }) => {
+    const fEl = document.getElementById(from);
+    const tEl = document.getElementById(to);
+    if (!fEl || !tEl) return;
+ 
+    const f = getRelPos(fEl, wrap);
+    const t = getRelPos(tEl, wrap);
+ 
+    // Centre points
+    const fCX = f.left + f.w / 2,  fCY = f.top + f.h / 2;
+    const tCX = t.left + t.w / 2,  tCY = t.top + t.h / 2;
+    const dx  = tCX - fCX,          dy  = tCY - fCY;
+ 
+    let x1, y1, x2, y2;
+ 
+    // Choose exit/entry edges based on dominant direction
+    if (Math.abs(dx) > Math.abs(dy) + 20) {
+      // Clearly horizontal — exit right/left, enter left/right
+      x1 = dx > 0 ? f.left + f.w : f.left;
+      y1 = fCY;
+      x2 = dx > 0 ? t.left       : t.left + t.w;
+      y2 = tCY;
+    } else if (Math.abs(dy) > Math.abs(dx) + 20) {
+      // Clearly vertical — exit bottom/top, enter top/bottom
+      x1 = fCX;
+      y1 = dy > 0 ? f.top + f.h : f.top;
+      x2 = tCX;
+      y2 = dy > 0 ? t.top       : t.top + t.h;
+    } else {
+      // Diagonal (e.g. researcher → security) — exit right, enter bottom or left
+      x1 = f.left + f.w;  y1 = fCY;
+      x2 = tCX;            y2 = t.top + t.h;
+    }
+ 
+    // Cubic bezier — control points create a smooth bend
+    const cx1 = x1 + (x2 - x1) * 0.55;
+    const cy1 = y1;
+    const cx2 = x1 + (x2 - x1) * 0.45;
+    const cy2 = y2;
+ 
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`);
+    path.setAttribute('fill',         'none');
+    path.setAttribute('stroke',       '#003d6b');
+    path.setAttribute('stroke-width', '1.8');
+    path.setAttribute('opacity',      '0.65');
+    path.setAttribute('marker-end',   'url(#ah)');
+    svg.appendChild(path);
   });
 }
-
-/* Close info panel when clicking outside a card */
-document.addEventListener('click', e => {
-  if (!e.target.closest('.card') && !e.target.closest('.legend-item')) {
-    hideInfo();
-    activeCard = null;
+ 
+/**
+ * Continuously redraw arrows for `ms` milliseconds
+ * so they stay accurate throughout CSS transitions.
+ */
+function animateArrows(ms) {
+  const end = performance.now() + ms;
+  function frame(now) {
+    drawAllArrows();
+    if (now < end) requestAnimationFrame(frame);
   }
-});
-
-/* Redraw arrows on resize */
-window.addEventListener('resize', drawAllArrows);
-
-/* Draw all arrows on load */
-window.addEventListener('load', drawAllArrows);
+  requestAnimationFrame(frame);
+}
+ 
+/* ── Init ───────────────────────────────────────────────────── */
+window.addEventListener('load',   () => animateArrows(100));
+window.addEventListener('resize', () => animateArrows(100));
 </script>
 </body>
 </html>
