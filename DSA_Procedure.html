@@ -4,15 +4,8 @@
   dsa_diagram.html
   ============================================================
   Interactive diagram of the DSA Article 40 data access
-  framework for vetted researchers.
- 
-  Behaviour:
-  - Page loads showing only card titles (collapsed)
-  - Click a title → expand content + description shown permanently
-  - Hover a closed title → description appears temporarily
-  - Arrows always visible, stable, redraw smoothly during expand
-  - All KUL blue, Cambria font
-  - Standalone — no dependencies
+  framework for vetted researchers. 
+  Code created using Claude.ai.
   ============================================================
 -->
 <html lang="en">
@@ -57,12 +50,6 @@
       padding: 44px 40px 60px;
     }
  
-    /*
-      The diagram is laid out as a CSS grid (2 cols).
-      The SVG arrow canvas is a separate absolutely-positioned
-      element that covers the same area — we measure card
-      positions relative to the grid container.
-    */
     .diagram-wrap {
       position: relative;
       max-width: 1060px;
@@ -250,7 +237,7 @@
         <span class="card-chevron">▾</span>
       </div>
       <div class="card-desc" id="desc-card-data">
-        DADSA Art. 8(c) — The data requested must be precisely described: its format, scope, specific attributes, metadata, and documentation requirements.
+        DADSA Art. 8(c) — The data requested must be precisely described.
       </div>
       <div class="card-body">
         <ul>
@@ -274,7 +261,7 @@
         <span class="card-chevron">▾</span>
       </div>
       <div class="card-desc" id="desc-card-security">
-        DADSA Art. 9(4) — Researchers must demonstrate robust data security covering confidentiality, storage periods, organisational safeguards, and secure processing environments.
+        DADSA Art. 9(4) — Researchers must demonstrate robust data security.
       </div>
       <div class="card-body">
         <ul>
@@ -301,8 +288,7 @@
         <span class="card-chevron">▾</span>
       </div>
       <div class="card-desc" id="desc-card-researcher">
-        DSA Art. 40(8) — Seven eligibility conditions to qualify as a vetted researcher: institutional affiliation, independence, funding disclosure, data security, proportionality, research purpose, and open results.
-      </div>
+        DSA Art. 40(8) — Seven eligibility conditions to qualify as a vetted researcher.
       <div class="card-body">
         <ul>
           <li>(a) Affiliated to a research organisation</li>
@@ -326,7 +312,7 @@
         <span class="card-chevron">▾</span>
       </div>
       <div class="card-desc" id="desc-card-gdpr">
-        The GDPR provides the overarching legal framework for personal data protection, with specific provisions enabling and constraining research data access.
+        The GDPR provides the overarching legal framework for personal data protection.
       </div>
       <div class="card-body">
         <ul>
@@ -350,7 +336,7 @@
         <span class="card-chevron">▾</span>
       </div>
       <div class="card-desc" id="desc-card-purpose">
-        DSA Art. 40(4) — Access is granted solely for research contributing to the detection, identification and understanding of systemic risks, and the assessment of risk mitigation measures.
+        DSA Art. 40(4) — Access is granted solely for research on systemic risks.
       </div>
       <div class="card-body">
         <ul>
@@ -370,7 +356,7 @@
         <span class="card-chevron">▾</span>
       </div>
       <div class="card-desc" id="desc-card-risks">
-        DSA Art. 34(1) — Four categories of systemic risks that VLOPs must assess and that researchers may study under the vetted researcher procedure.
+        DSA Art. 34(1) — Four categories of systemic risks that VLOPs must assess and that researchers may study.
       </div>
       <div class="card-body">
         <ul>
@@ -393,7 +379,7 @@
         <span class="card-chevron">▾</span>
       </div>
       <div class="card-desc" id="desc-card-mitigation">
-        DSA Art. 35 — Platforms must implement mitigation measures proportionate to identified systemic risks, and publish comprehensive annual reports on their risk assessments.
+        DSA Art. 35 — Platforms must implement mitigation measures proportionate to identified systemic risks.
       </div>
       <div class="card-body">
         <ul>
@@ -413,7 +399,7 @@
         <span class="card-chevron">▾</span>
       </div>
       <div class="card-desc" id="desc-card-rights">
-        Charter of Fundamental Rights of the EU — The systemic risk framework is anchored in the protection of these seven rights enumerated in DSA Art. 34(1)(b).
+        CFREU — The systemic risk framework is anchored in the protection of these seven rights enumerated in DSA Art. 34(1)(b).
       </div>
       <div class="card-body">
         <ul>
@@ -431,7 +417,7 @@
   </div><!-- /grid -->
 </div><!-- /diagram-wrap -->
  
-<p class="note">Based on the DSA (Regulation (EU) 2022/2065), DADSA, and CFREU</p>
+<p class="note">Based on the DSA, DADSA, GDPR and CFREU</p>
 </div><!-- /page-body -->
  
 <script>
