@@ -574,11 +574,53 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--kul-light); border-radius: 3px; }
 
 /* ============================================================
-   SMALLER SCREENS
+   RESPONSIVE ON MOBILE
    ============================================================ */
 
 @media (max-width: 768px) {
-  .app-body { flex-direction: column; }
-  .sidebar  { width: 100%; position: static; }
-  .canvas-wrap { padding: 16px; }
+
+  /* Sidebar au-dessus des résultats, pleine largeur */
+  .app-body {
+    flex-direction: column;
+    padding: 0 12px 40px;
+    gap: 16px;
+    margin-top: 12px;
+  }
+
+  .sidebar {
+    width: 100%;
+    position: static;
+  }
+
+  /* Résultats pleine largeur */
+  .results-panel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Chips plus grandes pour les doigts */
+  .chip {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  /* Tableau de score : masquer la colonne "bar" */
+  .col-bar,
+  .score-details th:last-child,
+  .score-details td:last-child {
+    display: none;
+  }
+
+  /* Toolbar */
+  .toolbar { padding: 6px 12px; }
+
+  /* Description banner */
+  .description-banner { padding: 12px 16px; }
+  .description-banner p { font-size: 12px; }
+
+  /* Cartes résultats */
+  .method-card { border-radius: 4px; }
+  .card-head   { padding: 8px 10px; }
+  .card-body   { padding: 10px 10px; }
+  .card-name   { font-size: 12px; }
 }
