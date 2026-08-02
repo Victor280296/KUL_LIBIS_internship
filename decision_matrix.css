@@ -572,3 +572,13 @@ body {
    ============================================================ */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--kul-light); border-radius: 3px; }
+
+/* ============================================================
+   SMALLER SCREENS
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .app-body { flex-direction: column; }
+  .sidebar  { width: 100%; position: static; }
+  .canvas-wrap { padding: 16px; }
+}
