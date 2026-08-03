@@ -35,7 +35,7 @@
     -1    No
     -0.5  Rather not
      0    Neutral / not specified
-     0.5  Rather yes / a bit
+     0.5  Rather yes
      1    Yes
 
 
@@ -213,7 +213,7 @@ const PAGE_DESCRIPTION =
   'and which other criteria they want to take into account. Once the choice is done, ' +
   'the page will present which data access method is the best suited for the research ' +
   'question. One can look at the score of each data access to understand which elements ' +
-  'have weighted in the computation.';
+  'have weighted in the selection.';
 
 const HIDDEN_FILTER_NOTE =
   'Two hidden filters are present in the decision matrix and assign penalties to the ' +
@@ -333,7 +333,7 @@ const COL = {
   admin:         20,
   fast:          21,
   // Hidden filters (always scored, never shown as chips)
-  dataquality:   22, // HIDDEN — always scored (formerly: scientific)
+  dataquality:   22, 
   crossplatform: 23,
 };
 
@@ -383,7 +383,7 @@ const ACCESS_MATRIX = {
   //                             VLOP  NV  Cont User  Eng  Mod Temp  Net Algo  Geo  Pub Priv Risk  Gen  Ads  Eth  Leg  Ctx Cost Tech Adm Fast  DQ   CP
   'Closed data API':        [      1,   0,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   0,   0,   1,   1,  -1,  -1,   1,  -1,  -1,   0,  -1 ],
   'Public data API':        [      1,   1,   1,   1,   1,   0,  '?', '?', '?',   0,   1,   0,   1,   1,  '?',  1,   1,  -1,  -1,   1,  -1,  -1,  -1,  -1 ],
-  'Commercial API':         [      1,   1,   1,  '?',  1,  '?', '?', '?', '?', '?',  1,  '?',  1,   1,  '?',  1,   1,  -1,  -1,   1,  '?','?',  0,  -1 ],
+  'Commercial API':         [      1,   1,   1,  '?',  1,  '?', '?', '?', '?', '?',  1,  '?',  1,   1,  '?',  1,   1,  -1,  1,   1,  '?','?',  0,  -1 ],
   'Ads library':            [      1,  '?',  1,  '?',  1,  '?', '?',   0, '?', '?',  1,   0,   1,   1,   1,   1,   1,  -1,  -1,   1,  '?','?',   0,  -1 ],
   'Statements of reason':   [      1,   1,   0,   0,   0,   1,   0,   0,   0,   0,   1,  '?',  1,   0,   0,   1,   1,  -1,  -1,   1,   1,   1,   1,  -1 ],
   'Logged-in scraping':     [      1,   1,   1,   0,   1,   0,   0,   1,   1,   0,   1,   0,   1,   1,   1,-0.5,  -1,   1,  '?',  0,   1,-0.5,   0.5,  -1 ],
@@ -466,7 +466,7 @@ const DESCRIPTIONS = {
   'tech':
     "Ensuring that the data collection doesn't rely on too much hard coding.",
   'admin':
-    "Ensuring that the data collection doesn't rely on too much administrative work such as request forms towards platforms or users.",
+    "Ensuring that the data collection doesn't rely on too much administrative work such as long or opaque request forms.",
   'fast':
     'Ensuring that the data collection can be done in short timeframes.',
 
@@ -478,7 +478,7 @@ const DESCRIPTIONS = {
     'APIs made publicly available by the platforms (either after a vetting process, or directly). ' +
     'They only contain public data.',
   'Commercial API':
-    'Paying APIs. They only contain public data as well.',
+    'Paying APIs. They only contain public data.',
   'Ads library':
     'Repository containing all ads published on the platform.',
   'Statements of reason':
@@ -717,7 +717,7 @@ function getPlatformFlags() {
  *   'uncertain' — no explicit positive, but at least one '?' (path stays open)
  *   'closed'    — all selected columns have explicit 0 or negative values
  *
- * Only an explicit 0, -0.5, or -1 closes the path.
+ * Only an explicit 0 closes the path.
  * '?' keeps it open but flags uncertainty.
  */
 function sectionStatus(row, colIds) {
